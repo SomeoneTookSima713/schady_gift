@@ -53,5 +53,7 @@ export const Translations = Object.freeze({
         TITLE_EXPORT: "Molekül Exportieren",
         MSG_EXPORT_COMPLETED: "Molekül erfolgreich exportiert!",
         MSG_EXPORT_ERRORED: "Ein Fehler ist beim Exportieren des Moleküls aufgetreten! Sende dies an Simon: \"$1\"",
+        TITLE_UPDATE: "Update",
+        MSG_UPDATE_STARTED: "Es wird ein Update für das Programm heruntergeladen ($1 -> $2). Es startet sich gleich neu."
     }
 });

@@ -1,4 +1,5 @@
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_updater::UpdaterExt;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -98,6 +99,33 @@ async fn export_molecule(
     }
 }
 
+async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+    use tauri::Emitter;
+    
+    if let Some(update) = app.updater()?.check().await? {
+        let mut downloaded = 0;
+
+        app.emit("update-download-started", format!("{{\"from\": \"{}\", \"to\": \"{}\"}}", update.current_version, update.version)).unwrap();
+
+        update.download_and_install(
+            |chunk_length, content_length| {
+                downloaded += chunk_length;
+                println!("Downloaded {downloaded} from {content_length:?}");
+                app.emit("update-download-progress", format!("{{\"curr\": {}, \"total\": {}}}", downloaded, content_length.unwrap_or(0))).unwrap();
+            },
+            || {
+                println!("Download Finished");
+                app.emit("update-download-finished", "").unwrap();
+            })
+            .await?;
+
+        println!("Update Installed! Restarting...");
+        app.restart();
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -109,6 +137,17 @@ pub fn run() {
             load_molecule,
             export_molecule
         ])
+        .setup(|app| {
+            let handle = app.handle().clone();
+
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_secs_f32(3.0)).await;
+
+                update(handle).await.unwrap();
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

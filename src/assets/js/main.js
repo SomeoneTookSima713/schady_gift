@@ -5,6 +5,7 @@ import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector
 import { pushNotification } from "./notifications.js";
 
 const invoke = window.__TAURI__.core.invoke;
+const listen = window.__TAURI__.event.listen;
 
 globalThis.waitForElm = function(selector) {
     return new Promise(resolve => {
@@ -153,3 +154,18 @@ window.onload = () => {
     document.getElementById("options-export-molecule").onclick = exportMolecule;
     document.getElementById("options-reset-molecule").onclick = () => setCurrentMolecule(new Molecule("C"));
 };
+
+setTimeout(() => {
+    listen("update-download-started", event => {
+        /** @type {{from: String, to: String}} */
+        let versionInfo = JSON.parse(event.payload);
+
+        console.log("UPDATEEVENT");
+
+        let msg = Translations.NOTIFICATIONS.MSG_UPDATE_STARTED
+            .replace("$1", versionInfo.from)
+            .replace("$2", versionInfo.to);
+
+        pushNotification(Translations.NOTIFICATIONS.TITLE_UPDATE, msg, false, false);
+    });
+}, 500);
