@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "shadychemicals",
+  "productName": "schadychemicals",
   "version": "0.1.0",
-  "identifier": "de.simon.shadychemicals",
+  "identifier": "de.simon.schadychemicals",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Simons Chemiebaukasten für Herr Schädlich",
+        "title": "SchadyChemicals - Der Chemiebaukasten für Herr Schädlich",
         "width": 800,
         "height": 600
       }
@@ -35,7 +35,7 @@
     "updater": {
         "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1QUExMkFCODBBNzhDRUIKUldUcmpLZUFxeEtxbGRZeVIwYWtpM241MkJ5Ky9mZHVQaVVHd0RQT0NmdjByUmN6WGVEbmNZTUwK",
         "endpoints": [
-            
+
         ]
     }
   }
