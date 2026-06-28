@@ -1,0 +1,67 @@
+#notifications {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+.notification {
+    width: 250px;
+    min-height: 60pt;
+    padding: 8pt;
+    border-style: solid;
+    border-radius: 12pt;
+    border-width: 1pt;
+    border-color: #bbb;
+    margin-right: 8pt;
+    margin-bottom: 8pt;
+
+    transform: translateX(120%);
+    transition: transform 0.5s ease-in-out;
+}
+
+.notification.visible {
+    transform: none;
+}
+
+@keyframes autoDismissTimer {
+    from { width: inherit; }
+    to { width: 0; }
+}
+
+.notification.auto-dismiss::before {
+    position: absolute;
+    content: '';
+    top: 1pt;
+    left: 6pt;
+    width: calc(100% + 4pt);
+    overflow: hidden;
+    height: 2pt;
+    background: #ddd;
+    border-radius: 1pt;
+    animation: autoDismissTimer 8s linear;
+    animation-fill-mode: forwards;
+}
+
+.notification-header {
+    width: 100%;
+    border-bottom: solid 2pt #ddd;
+    padding: 4pt;
+    margin-bottom: 4pt;
+    box-sizing: border-box;
+
+    h3 {
+        margin: 0;
+        display: inline;
+        font-size: 12pt;
+    }
+
+    button {
+        float: right;
+    }
+}
+
+.notification-body {
+    width: 100%;
+    padding: 4pt;
+    box-sizing: border-box;
+}

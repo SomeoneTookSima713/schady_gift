@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="stylesheet" href="/assets/css/main.css" />
+        <link rel="stylesheet" href="/assets/css/molecule.css" />
+        <link rel="stylesheet" href="/assets/css/molecule_numeric_classes.css" />
+        <link rel="stylesheet" href="/assets/css/inspector.css" />
+        <link rel="stylesheet" href="/assets/css/notifications.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tauri App</title>
+        <script type="module" src="/assets/js/main.js" defer></script>
+
+        <!-- <link rel="stylesheet" href="/assets/bootstrap/bootstrap.min.css" /> -->
+    </head>
+    <body>
+        <div id="options-bar">
+            <button id="options-save-molecule">Molekül Speichern</button>
+            <button id="options-load-molecule">Molekül Laden</button>
+            <button id="options-export-molecule">Molekül als Bild Exportieren</button>
+            <button id="options-reset-molecule">Neues Molekül</button>
+        </div>
+        <main class="container" id="main_container">
+        </main>
+        <div id="inspector">
+            <button id="inspector-close">Schließen</button>
+            <h3>Allgemeine Daten</h3>
+            <label>Atom/Gruppe:</label> <input autocomplete="off" id="inspector-name" type="text" /> <br>
+            <label>Ladung:</label> <input autocomplete="off" id="inspector-charge" type="number" max="10" min="-10" /> <br>
+            <button id="inspector-remove-elem">Element entfernen (behält Bindung bei)</button>
+
+            <h3>Bindungen</h3>
+            <div id="inspector-bonds">
+                <select class="inspector-bond-select-type">
+                    <option value="single">Einfach</option>
+                    <option value="double">Zweifach</option>
+                    <option value="triple">Dreifach</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="notifications">
+        </div>
+    </body>
+</html>

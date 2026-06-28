@@ -1,0 +1,113 @@
+#inspector {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 300px;
+    height: 100vh;
+    background-color: beige;
+    transition: transform 0.25s ease-in-out;
+    box-shadow: 10px 0 20px #494949;
+    padding: 12pt;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    transform: translateX(100%);
+}
+#inspector.active {
+    transform: none;
+}
+
+#inspector .inspector-general {
+    justify-self: flex-start;
+
+    input {
+        width: 55%;
+        float: right;
+    }
+}
+#inspector .inspector-bonds {
+    justify-self: flex-start;
+    height: stretch;
+    min-height: 0;
+    overflow: hidden;
+
+    .inspector-bonds-list {
+        height: stretch;
+        overflow: hidden scroll;
+        min-height: 0;
+    }
+}
+#inspector .inspector-add-bond {
+    margin-top: auto;
+    justify-self: flex-end;
+
+    h4 {
+        margin-block-end: 0;
+        margin-inline-end: 0;
+    }
+
+    label {
+        width: 40%;
+    }
+
+    select {
+        width: 50%;
+        float: right;
+    }
+
+    input {
+        float: right;
+    }
+}
+
+.inspector-bond {
+    margin-bottom: 4pt;
+
+    label {
+        display: inline-block;
+        vertical-align: text-top;
+    }
+
+    select {
+        width: 40%;
+        float: right;
+    }
+
+    input {
+        box-sizing: border-box;
+        float: right;
+        width: 40%;
+    }
+}
+
+.inspector-bond * {
+    margin-right: 4pt !important;
+    height: 20pt !important;    
+}
+
+.inspector-bond button.inspector-bond-elem-name {
+    padding: 0;
+    padding-left: 2pt;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    display: inline-block;
+    width: 20%;
+    overflow: hidden;
+    text-align: left;
+    font-weight: 600;
+}
+
+.inspector-bond button.inspector-bond-new-elem {
+    padding: 0;
+    padding-left: 2pt;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    display: inline-block;
+    width: 20%;
+    overflow: hidden;
+    text-align: left;
+    /* font-weight: 500; */
+}

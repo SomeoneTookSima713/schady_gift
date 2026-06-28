@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "shadychemicals",
+  "version": "0.1.0",
+  "identifier": "de.simon.shadychemicals",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Simons Chemiebaukasten für Herr Schädlich",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "msi",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+        "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk1QUExMkFCODBBNzhDRUIKUldUcmpLZUFxeEtxbGRZeVIwYWtpM241MkJ5Ky9mZHVQaVVHd0RQT0NmdjByUmN6WGVEbmNZTUwK",
+        "endpoints": [
+            
+        ]
+    }
+  }
+}

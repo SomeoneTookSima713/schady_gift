@@ -1,0 +1,187 @@
+.molecule {
+    --stuff-size: 14pt;
+    --bond-width-initial: 6;
+    --bond-width-mult: 1;
+    --bond-rot: 0deg;
+    --total-bond-rot: 0deg;
+    --elem-transform-x: 0;
+    font-size: var(--stuff-size);
+    margin: auto;
+    /* border-left: 2pt solid red; */
+    width: var(--molecule-width);
+    height: var(--molecule-height);
+}
+
+.element {
+    display: inline;
+    position: absolute;
+    --parent-total-bond-rot: var(--total-bond-rot);
+    --bond-aro-add: 0pt;
+    /* transform-origin: var(--elem-transform-x) 48%; */
+    /* transform-origin:
+        calc((0.4 * cos(var(--bond-rot)) + 0.5 * sin(var(--bond-rot))) * var(--stuff-size))
+        calc((0.4 * sin(var(--bond-rot)) + 0.5 * cos(var(--bond-rot))) * var(--stuff-size)); */
+    
+    /* transform: rotate(calc(-1 * var(--bond-rot))); */
+}
+
+.molecule > .element {
+    position: relative;
+    left: calc(var(--molecule-initial-x) - var(--molecule-min-x));
+    top: calc(var(--molecule-initial-y) - var(--molecule-min-y));
+}
+
+.element:has(> .elem-count) {
+    --bond-aro-add: 5pt;
+}
+
+.element:has(> .elem-charge) {
+    --bond-aro-add: 8pt;
+}
+
+.element.highlighted {
+    background: #a1c9fd;
+}
+
+.element.selected {
+    background: #25f19c;
+}
+
+.elem-content {
+    display: inline-block;
+    margin-right: 0.5pt;
+    width: max-content;
+}
+
+.elem-content sub {
+    display: inline-block;
+    vertical-align: inherit;
+    font-size: calc(var(--stuff-size) * 0.66);
+    transform: translateY(calc(var(--stuff-size) * 0.16));
+}
+
+.elem-content sup {
+    display: inline-block;
+    vertical-align: inherit;
+    font-size: calc(var(--stuff-size) * 0.66);
+    transform: translateY(calc(var(--stuff-size) * -0.16));
+}
+
+.elem-content button {
+    border: none;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+}
+
+.elem-charge {
+    display: inline-block;
+    position: absolute;
+    font-size: calc(0.6 * var(--stuff-size));
+    transform: translateY(calc(-0.3 * var(--stuff-size)));
+}
+
+.elem-count {
+    display: inline-block;
+    position: absolute;
+    font-size: calc(0.6 * var(--stuff-size));
+    transform: translateY(calc(0.3 * var(--stuff-size)));
+}
+
+.partial-charge::before {
+    content: 'δ';
+}
+
+.partial-charge {
+    position: absolute;
+    left: 0;
+}
+
+.partial-charge.positive::after {
+    content: '⁺';
+}
+.partial-charge.negative::after {
+    content: '⁻';
+}
+
+.bond {
+    --bond-width: calc(var(--bond-width-initial) * var(--bond-width-mult));
+    --molecule-elem-dist: calc(1mm * var(--bond-width) + var(--stuff-size));
+    --bond-attached-elem-width: 0; /* Gets set through JS */
+    --bond-attached-elem-height: 0; /* Gets set through JS */
+    --bond-elem-offset-x-mult: calc(sign(mod(var(--bond-rot) + 89deg, 359deg) - 180deg) * 0.5 + 0.5);
+    --bond-elem-offset-x: calc(var(--bond-attached-elem-width) * var(--bond-elem-offset-x-mult));
+    --bond-elem-pos-x: calc(var(--molecule-elem-dist) * cos(var(--bond-rot)) + (12.2px - var(--bond-attached-elem-width)) * var(--bond-elem-offset-x-mult));
+    --bond-elem-pos-y: calc(var(--molecule-elem-dist) * sin(var(--bond-rot)));
+    display: inline-block;
+    position: absolute;
+    left: var(--bond-elem-pos-x);
+    top: var(--bond-elem-pos-y);
+}
+
+
+.bond::before {
+    content: '';
+    position: absolute;
+    left: calc(12.2px * (0.5 - var(--bond-elem-offset-x-mult)) + var(--bond-attached-elem-width) * var(--bond-elem-offset-x-mult));
+    top: 0;
+    display: block;
+    width: calc(1mm * var(--bond-width));
+    height: var(--bond-attached-elem-height);
+
+    transform-origin: 0% 50%;
+    transform:
+        rotate(calc(180deg + var(--bond-rot)))
+        translateX(calc(0.5 * var(--stuff-size)))
+        ;
+}
+
+/* Debugging */
+/* .bond::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: var(--bond-attached-elem-width);
+    height: 4px;
+    background: repeating-linear-gradient(
+        to right,
+        red 0px,
+        blue 12.2px
+    );
+} */
+
+/* .bond::before {
+    --bond-svg-transform-origin-x: calc(12.16px * (0.5 - var(--bond-elem-offset-x-mult)) + var(--bond-elem-offset-x));
+    position: absolute;
+    display: inline-block;
+    display: none;
+    width: calc(1mm * var(--bond-width));
+    overflow: hidden;
+    height: 10mm;
+} */
+
+.bond.single::before {
+    background: url("/assets/png/single_bond.png");
+    background-size: 100% 40%;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.bond.double::before {
+    background: url("/assets/png/double_bond.png");
+    background-size: 100% 40%;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.bond.triple::before {
+    background: url("/assets/png/triple_bond.png");
+    background-size: 100% 40%;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}

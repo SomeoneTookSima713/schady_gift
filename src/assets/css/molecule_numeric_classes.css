@@ -1,0 +1,141 @@
+.bond.rot-0 {
+    --bond-rot: 0deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-15 {
+    --bond-rot: 15deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-30 {
+    --bond-rot: 30deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-45 {
+    --bond-rot: 45deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-60 {
+    --bond-rot: 60deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-75 {
+    --bond-rot: 75deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-90 {
+    --bond-rot: 90deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-105 {
+    --bond-rot: 105deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-120 {
+    --bond-rot: 120deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-135 {
+    --bond-rot: 135deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-150 {
+    --bond-rot: 150deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-165 {
+    --bond-rot: 165deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-180 {
+    --bond-rot: 180deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-195 {
+    --bond-rot: 195deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-210 {
+    --bond-rot: 210deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-225 {
+    --bond-rot: 225deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-240 {
+    --bond-rot: 240deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-255 {
+    --bond-rot: 255deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-270 {
+    --bond-rot: 270deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-285 {
+    --bond-rot: 285deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-300 {
+    --bond-rot: 300deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+.bond.rot-315 {
+    --bond-rot: 315deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-330 {
+    --bond-rot: 330deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+.bond.rot-345 {
+    --bond-rot: 345deg;
+    --total-bond-rot: calc(var(--parent-total-bond-rot) + var(--bond-rot));
+}
+
+
+
+.partial-charge.pos_top {
+    transform: translateY(calc(-1.1 * var(--stuff-size))) scale(0.75);
+}
+
+.partial-charge.pos_bottom {
+    transform: translateY(calc(1.1 * var(--stuff-size))) scale(0.75);
+}
+
+.partial-charge.pos_left {
+    transform: translateX(calc(-1.1 * var(--stuff-size))) scale(0.75);
+}
+
+.partial-charge.pos_right {
+    transform: translateX(calc(1.1 * var(--stuff-size))) scale(0.75);
+}
+
+
+
+.bond.len_x1_0 {
+    --bond-after-rot-offset: 28pt;
+    --bond-width: 6;
+    --bond-offset: 10pt;
+}
+
+.bond.len_x1_5 {
+    --bond-after-rot-offset: 38pt;
+    --bond-width: 9;
+    --bond-offset: 14.5pt;
+}
+
+.bond.len_x2_0 {
+    --bond-after-rot-offset: 48pt;
+    --bond-width: 12;
+    --bond-offset: 19pt;
+}

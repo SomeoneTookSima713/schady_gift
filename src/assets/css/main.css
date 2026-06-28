@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'Roboto';
+    src: url("/assets/font/Roboto-VariableFont_wdth,wght.ttf");
+}
+
+:root {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+
+  width: 100vw;
+  height: 100vh;
+}
+
+.container {
+    --molecule-min-x: 0;
+    --molecule-min-y: 0;
+    --molecule-max-x: 0;
+    --molecule-max-y: 0;
+    --molecule-width: 0;
+    --molecule-height: 0;
+    --molecule-initial-x: 0;
+    --molecule-initial-y: 0;
+    margin: 0;
+    padding-top: 10vh;
+    /* display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center; */
+}
