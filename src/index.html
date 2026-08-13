@@ -11,16 +11,16 @@
         <title>Tauri App</title>
         <script type="module" src="/assets/js/main.js" defer></script>
 
-        <!-- <link rel="stylesheet" href="/assets/bootstrap/bootstrap.min.css" /> -->
+        <link rel="stylesheet" href="/assets/bootstrap/bootstrap.min.css" />
     </head>
     <body>
-        <div id="options-bar">
-            <button id="options-save-molecule">Molekül Speichern</button>
-            <button id="options-load-molecule">Molekül Laden</button>
-            <button id="options-export-molecule">Molekül als Bild Exportieren</button>
-            <button id="options-reset-molecule">Neues Molekül</button>
+        <div class="container-fluid position-fixed top-0 start-0 px-1 py-1" id="options-bar">
+            <button class="btn me-1 btn-outline-dark" id="options-save-molecule">Molekül Speichern</button>
+            <button class="btn me-1 btn-outline-dark" id="options-load-molecule">Molekül Laden</button>
+            <button class="btn me-1 btn-outline-dark" id="options-export-molecule">Molekül als Bild Exportieren</button>
+            <button class="btn me-1 btn-outline-dark" id="options-reset-molecule">Neues Molekül</button>
         </div>
-        <main class="container" id="main_container">
+        <main class="container-fluid h-100 mol-container" id="main_container">
         </main>
         <div id="inspector">
             <button id="inspector-close">Schließen</button>
@@ -41,5 +41,7 @@
 
         <div id="notifications">
         </div>
+
+        <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     </body>
 </html>

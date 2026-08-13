@@ -27,3 +27,5 @@ dist-ssr
 /test_install/
 
 /*.shcmol
+
+/Manual_de-DE*

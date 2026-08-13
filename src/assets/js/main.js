@@ -1,7 +1,7 @@
 import { Translations } from "./translations.js";
-import { Bond, BondType, ChemElem, Molecule, PartialCharge, mainRender, getMoleculeSize } from "./molecule.js";
+import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge, getMoleculeSize } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
-import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector } from "./inspector.js";
+import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
 
 const invoke = window.__TAURI__.core.invoke;
@@ -169,3 +169,31 @@ setTimeout(() => {
         pushNotification(Translations.NOTIFICATIONS.TITLE_UPDATE, msg, false, false);
     });
 }, 500);
+
+var draggingMainWorkspace = false;
+/** @type {{x: number, y: number}} */
+var origMousePos = {x: 0, y: 0};
+/** @type {{x: number, y: number}} */
+var origElemOffset = {x: 0, y: 0};
+document.getElementById("main_container").onmousedown = event => {
+    if (event.button == 2) {
+        draggingMainWorkspace = true;
+        origMousePos = {x: event.screenX, y: event.screenY};
+        origElemOffset = {x: mainMoleculeRenderer.molecule_offset_x, y: mainMoleculeRenderer.molecule_offset_y};
+    }
+};
+
+document.onmousemove = event => {
+    if (draggingMainWorkspace) {
+        mainMoleculeRenderer.molecule_offset_x = origElemOffset.x + event.screenX - origMousePos.x;
+        mainMoleculeRenderer.molecule_offset_y = origElemOffset.y + event.screenY - origMousePos.y;
+    }
+};
+
+document.onmouseup = event => {
+    if (event.button == 2) {
+        draggingMainWorkspace = false;
+    }
+};
+
+window.oncontextmenu = () => false;

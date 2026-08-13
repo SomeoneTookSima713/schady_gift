@@ -1,3 +1,22 @@
+.mol-container {
+    --molecule-min-x: 0;
+    --molecule-min-y: 0;
+    --molecule-max-x: 0;
+    --molecule-max-y: 0;
+    --molecule-width: 0;
+    --molecule-height: 0;
+    --molecule-initial-x: 0;
+    --molecule-initial-y: 0;
+    --molecule-offset-x: 0;
+    --molecule-offset-y: 0;
+    margin: 0;
+    padding-top: 10vh;
+    /* display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center; */
+}
+
 .molecule {
     --stuff-size: 14pt;
     --bond-width-initial: 6;
@@ -27,8 +46,8 @@
 
 .molecule > .element {
     position: relative;
-    left: calc(var(--molecule-initial-x) - var(--molecule-min-x));
-    top: calc(var(--molecule-initial-y) - var(--molecule-min-y));
+    left: calc(var(--molecule-initial-x) - var(--molecule-min-x) + var(--molecule-offset-x));
+    top: calc(var(--molecule-initial-y) - var(--molecule-min-y) + var(--molecule-offset-y));
 }
 
 .element:has(> .elem-count) {

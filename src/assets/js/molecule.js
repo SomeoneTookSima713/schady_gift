@@ -42,10 +42,14 @@ export class Molecule {
         this.root = ChemElem.normalize(baseElem)
     }
 
-    render() {
+    /**
+     * @param {MoleculeRenderer} renderer 
+     * @returns {HTMLElement} Rendered HTML
+     */
+    render(renderer) {
         let molecule = document.createElement("div");
         molecule.classList.add("molecule");
-        molecule.appendChild(this.root.render());
+        molecule.appendChild(this.root.render(renderer));
         return molecule;
     }
 
@@ -91,9 +95,10 @@ export class Bond {
     }
 
     /**
-     * @returns {HTMLElement}
+     * @param {MoleculeRenderer} renderer 
+     * @returns {HTMLElement} Rendered HTML
      */
-    render() {
+    render(renderer) {
         let bond_elem = document.createElement("div");
         // bond_elem.classList.add("bond", this.bondType, `rot-${this.angle}`);
         bond_elem.classList.add("bond", this.bondType);
@@ -101,7 +106,7 @@ export class Bond {
         bond_elem.style.setProperty("--bond-width-mult", `${this.length}`);
 
         if (this.attachedElem) {
-            let child = this.attachedElem.render();
+            let child = this.attachedElem.render(renderer);
             bond_elem.appendChild(child);
             if (this.attachedElem.name === "_") {
                 bond_elem.style.setProperty("--bond-attached-elem-width", "12.16px");
@@ -110,7 +115,7 @@ export class Bond {
                 waitForElm(`#${child.id}`).then(elem => {
                     bond_elem.style.setProperty("--bond-attached-elem-width", `${child.getElementsByClassName("elem-content")[0].getBoundingClientRect().width}px`);
                     bond_elem.style.setProperty("--bond-attached-elem-height", `${child.getElementsByClassName("elem-content")[0].getBoundingClientRect().height}px`);
-                    updateMoleculeSize();
+                    renderer.updateMoleculeSize();
                 });
             }
         } else {
@@ -252,9 +257,10 @@ export class ChemElem {
     }
 
     /**
-     * @returns {HTMLElement}
+     * @param {MoleculeRenderer} renderer 
+     * @returns {HTMLElement} Rendered HTML
      */
-    render() {
+    render(renderer) {
         let elem = document.createElement("div");
         elem.classList.add("element");
         elem.id = `elem-${this.id}`;
@@ -278,7 +284,7 @@ export class ChemElem {
             elem.appendChild(bond_charge);
         }
         for (let bond of this.attachedBonds) {
-            elem.appendChild(bond.render());
+            elem.appendChild(bond.render(renderer));
         }
 
         return elem;
@@ -407,13 +413,85 @@ export class MoleculeBuilder extends MoleculeBuilderPart {
     }
 }
 
-export function mainRender(molecule) {
-    if (!molecule) { return; }
-    let content = document.getElementById("main_container");
-    for (let child of content.children) {
-        content.removeChild(child);
+export class MoleculeRenderer {
+    /** @type {HTMLElement} */
+    html_element;
+
+    /** @type {{x: number, y: number}} */
+    #mol_offset = { x: 0, y: 0 };
+    
+    /**
+     * @param {HTMLElement} [wrap_elem] 
+     */
+    constructor(wrap_elem) {
+        this.html_element = (wrap_elem !== undefined) ? wrap_elem : document.createElement("div");
+        this.html_element.classList.add("mol-container");
+        this.html_element.style.setProperty("--molecule-offset-x", "0px");
+        this.html_element.style.setProperty("--molecule-offset-y", "0px");
     }
-    content.appendChild(molecule.render());
+
+    /** @type {number} */
+    get molecule_offset_x() {
+        return this.#mol_offset.x;
+    }
+
+    /** @type {number} */
+    get molecule_offset_y() {
+        return this.#mol_offset.y;
+    }
+    
+    /** @type {number} */
+    set molecule_offset_x(value) {
+        this.#mol_offset.x = value;
+        this.html_element.style.setProperty("--molecule-offset-x", `${this.#mol_offset.x}px`);
+    }
+    
+    /** @type {number} */
+    set molecule_offset_y(value) {
+        this.#mol_offset.y = value;
+        this.html_element.style.setProperty("--molecule-offset-y", `${this.#mol_offset.y}px`);
+    }
+
+    /**
+     * Renders the given molecule into the HTML element wrapped by this
+     * renderer.
+     * 
+     * When given nothing as a parameter, clears the HTML element of any
+     * previously rendered molecule.
+     * 
+     * @param {Molecule} [molecule]
+     */
+    render(molecule) {
+        for (let child of this.html_element.children) {
+            this.html_element.removeChild(child);
+        }
+        if (molecule !== undefined) {
+            this.html_element.appendChild(molecule.render(this));
+        }
+    }
+
+    updateMoleculeSize() {
+        if (this.html_element.children.length > 0) {
+            let metrics = getMoleculeSize(this.html_element.children[0]);
+            this.html_element.style.setProperty("--molecule-min-x", `${metrics.minX}px`);
+            this.html_element.style.setProperty("--molecule-min-y", `${metrics.minY}px`);
+            this.html_element.style.setProperty("--molecule-max-x", `${metrics.maxX}px`);
+            this.html_element.style.setProperty("--molecule-max-y", `${metrics.maxY}px`);
+            this.html_element.style.setProperty("--molecule-initial-x", `${metrics.initialX}px`);
+            this.html_element.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
+            this.html_element.style.setProperty("--molecule-width", `${metrics.width}px`);
+            this.html_element.style.setProperty("--molecule-height", `${metrics.height}px`);
+        } else {
+            this.html_element.style.setProperty("--molecule-min-x", '0px');
+            this.html_element.style.setProperty("--molecule-min-y", '0px');
+            this.html_element.style.setProperty("--molecule-max-x", '0px');
+            this.html_element.style.setProperty("--molecule-max-y", '0px');
+            this.html_element.style.setProperty("--molecule-initial-x", '0px');
+            this.html_element.style.setProperty("--molecule-initial-y", '0px');
+            this.html_element.style.setProperty("--molecule-width", '1px');
+            this.html_element.style.setProperty("--molecule-height", '1px');
+        }
+    }
 }
 
 /**
@@ -445,7 +523,7 @@ export function getMoleculeSize(mol_html) {
         if (!curr_node) { return; }
 
         let rect = curr_node.getBoundingClientRect();
-        console.log(curr_node, rect);
+        // console.log(curr_node, rect);
         min_x = Math.min(min_x, rect.left, rect.right);
         max_x = Math.max(max_x, rect.left, rect.right);
         min_y = Math.min(min_y, rect.top, rect.bottom);
@@ -473,18 +551,4 @@ export function getMoleculeSize(mol_html) {
         initialX: initialRect.left,
         initialY: initialRect.top,
     };
-}
-
-export function updateMoleculeSize() {
-    let container = document.getElementById("main_container");
-    let metrics = getMoleculeSize(container.children[0]);
-    console.log("Molecule Metrics:", metrics);
-    container.style.setProperty("--molecule-min-x", `${metrics.minX}px`);
-    container.style.setProperty("--molecule-min-y", `${metrics.minY}px`);
-    container.style.setProperty("--molecule-max-x", `${metrics.maxX}px`);
-    container.style.setProperty("--molecule-max-y", `${metrics.maxY}px`);
-    container.style.setProperty("--molecule-initial-x", `${metrics.initialX}px`);
-    container.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
-    container.style.setProperty("--molecule-width", `${metrics.width}px`);
-    container.style.setProperty("--molecule-height", `${metrics.height}px`);
 }

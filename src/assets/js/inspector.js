@@ -1,4 +1,4 @@
-import { Bond, BondType, ChemElem, Molecule, PartialCharge, mainRender, updateMoleculeSize } from "./molecule.js";
+import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
 
 import { Translations } from "./translations.js";
@@ -136,7 +136,7 @@ export class InspectorWindow {
             autocomplete: false,
             oninput: elem => {
                 element.name = elem.value;
-                mainRender(currentMolecule);
+                mainMoleculeRenderer.render(currentMolecule);
             }
         });
         let sparseRemoveBtn = createButton(Translations.TEXTS.INSPECTOR_BTN_REMOVE_SPARSE, {
@@ -146,8 +146,8 @@ export class InspectorWindow {
                 element.parentBond.attachedElem = undefined;
                 element.parentElem = null;
                 inspectElemFn(parent);
-                mainRender(currentMolecule);
-                updateMoleculeSize();
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
             }
         });
         let fullRemoveBtn = createButton(Translations.TEXTS.INSPECTOR_BTN_REMOVE_FULL, {
@@ -156,8 +156,8 @@ export class InspectorWindow {
                 let parent = element.parentElem;
                 element.unattachSelf();
                 inspectElemFn(parent);
-                mainRender(currentMolecule);
-                updateMoleculeSize();
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
             }
         });
         if (!element.parentElem) {
@@ -201,7 +201,7 @@ export class InspectorWindow {
                     } else {
                         element.attachedBonds.splice(element.attachedBonds.indexOf(currBond), 1);
                     }
-                    mainRender(currentMolecule);
+                    mainMoleculeRenderer.render(currentMolecule);
                     inspectElemFn(element);
                 }
             });
@@ -209,7 +209,7 @@ export class InspectorWindow {
             classes: ["inspector-bond-select-type"],
             oninput: elem => {
                 currBond.bondType = elem.value;
-                mainRender(currentMolecule);
+                mainMoleculeRenderer.render(currentMolecule);
             }
         });
         let bondAngle = createNumberInput((currBond.angle + (isParent ? 180 : 0)) % 360, {
@@ -222,7 +222,7 @@ export class InspectorWindow {
                 numval = (numval + 3600) % 360;
                 elem.value = numval.toString();
                 currBond.angle = (numval + (isParent ? 180 : 0)) % 360;
-                mainRender(currentMolecule);
+                mainMoleculeRenderer.render(currentMolecule);
             }
         });
         let bondLength = createNumberInput(currBond.length, {
@@ -235,7 +235,7 @@ export class InspectorWindow {
                 numval = Math.max(Math.min(numval, 4), 0.25);
                 elem.value = numval.toString();
                 currBond.length = numval;
-                mainRender(currentMolecule);
+                mainMoleculeRenderer.render(currentMolecule);
             }
         });
         let attachedElement = createButton(isParent ? element.parentElem.name : (currBond.attachedElem ? currBond.attachedElem.name : Translations.TEXTS.INSPECTOR_ADD_ELEMENT), {
@@ -247,7 +247,7 @@ export class InspectorWindow {
                     currBond.attachedElem = newElem;
                     newElem.parentElem = element;
                     inspectElemFn(getOrInitPersistentElems().SWITCH_INSPECT_CHECKBOX.checked ? newElem : element);
-                    mainRender(currentMolecule);
+                    mainMoleculeRenderer.render(currentMolecule);
                 }),
             onmouseenter: currBond.attachedElem ? _ => hightlightedElems.add(currBond.attachedElem) : undefined,
             onmouseleave: currBond.attachedElem ? _ => hightlightedElems.delete(currBond.attachedElem) : undefined,
@@ -290,7 +290,7 @@ export class InspectorWindow {
                 if (newBond.attachedElem) {
                     newBond.attachedElem.parentElem = element;
                 }
-                mainRender(currentMolecule);
+                mainMoleculeRenderer.render(currentMolecule);
                 inspectElemFn((newBond.attachedElem && persistentElems.SWITCH_INSPECT_CHECKBOX.checked) ? newBond.attachedElem : element);
             }
         });
@@ -393,7 +393,7 @@ export class InspectorWindow {
 }
 
 window.addEventListener("load", () => {
-    mainRender(currentMolecule);
+    mainMoleculeRenderer.render(currentMolecule);
 });
 
 /** @type {Molecule} */
@@ -402,6 +402,8 @@ var currentMolecule;
 var selectedElem = null;
 /** @type {Set<ChemElem>} */
 var hightlightedElems = new Set();
+/** @type {MoleculeRenderer} */
+export var mainMoleculeRenderer = new MoleculeRenderer(document.getElementById("main_container"));
 
 /**
  * @returns {Molecule}
@@ -416,8 +418,8 @@ export function getCurrentMolecule() {
 export function setCurrentMolecule(molecule) {
     currentMolecule = molecule;
     closeInspector();
-    mainRender(currentMolecule);
-    updateMoleculeSize();
+    mainMoleculeRenderer.render(currentMolecule);
+    mainMoleculeRenderer.updateMoleculeSize();
 }
 
 globalThis.shadyChemicalsDebug_getCurrentMolecule = getCurrentMolecule;

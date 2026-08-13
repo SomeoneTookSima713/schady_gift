@@ -120,6 +120,7 @@ async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
             .await?;
 
         println!("Update Installed! Restarting...");
+        tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
         app.restart();
     }
 
