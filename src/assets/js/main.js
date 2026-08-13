@@ -57,13 +57,15 @@ function saveMolecule() {
         .catch((/** @type {string} */ error) => {
             if (error === "err_save_aborted") {
                 console.log("Save was aborted");
-            } else if (error.startsWith("err_write_errored_")) {
+            } else if (typeof error === "string" && error.startsWith("err_write_errored_")) {
                 pushNotification(
                     Translations.NOTIFICATIONS.TITLE_SAVE,
                     Translations.NOTIFICATIONS.MSG_SAVE_ERRORED.replace("$1", error.replace("err_write_errored_", "")),
                     true, false
                 );
                 console.error("Error writing file:", error.replace("err_write_errored_", ""));
+            } else {
+                throw error
             }
         });
 }
@@ -91,12 +93,14 @@ function loadMolecule() {
         .catch((/** @type {string} */ error) => {
             if (error === "err_load_aborted") {
                 console.log("Load was aborted");
-            } else if (error.startsWith("err_read_errored_")) {
+            } else if (typeof error === "string" && error.startsWith("err_read_errored_")) {
                 pushNotification(
                     Translations.NOTIFICATIONS.TITLE_LOAD,
                     Translations.NOTIFICATIONS.MSG_LOAD_ERRORED.replace("$1", error.replace("err_read_errored_", "")),
                     true, false
                 );
+            } else {
+                throw error;
             }
         })
 }

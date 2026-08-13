@@ -9,7 +9,7 @@
  * 
  * @param {string} tag 
  * @param {string|HTMLElement[]} content 
- * @param {{id?: string, classes?: string[]}} options
+ * @param {{id?: string, classes?: string[], attrs?: {[string]: string}, styles?: {[string]: string|null}}} options
  * @returns {HTMLElement}
  */
 export function createSimpleElement(tag, content, options) {
@@ -20,6 +20,16 @@ export function createSimpleElement(tag, content, options) {
     }
     if (options.classes) {
         elem.classList.add(...options.classes);
+    }
+    if (options.attrs) {
+        for (let [key, val] of Object.entries(options.attrs)) {
+            elem.setAttribute(key, val);
+        }
+    }
+    if (options.styles) {
+        for (let [key, val] of Object.entries(options.styles)) {
+            elem.style.setProperty(key, val);
+        }
     }
     if (content instanceof Array) {
         content.forEach(e => elem.appendChild(e));
