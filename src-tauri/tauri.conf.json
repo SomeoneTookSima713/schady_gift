@@ -34,7 +34,8 @@
         "wix": {
             "language": "de-DE"
         }
-    }
+    },
+    "resources": ["builtin_library/"]
   },
   "plugins": {
     "updater": {

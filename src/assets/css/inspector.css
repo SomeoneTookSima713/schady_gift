@@ -112,6 +112,50 @@
         margin-left: .75rem;
     }
 
+    .inspector-add-bond-select-group {
+        width: 65%;
+        margin-top: 0.75rem;
+        margin-left: 0.75rem;
+        margin-bottom: 0.75rem;
+        padding: 0;
+        
+        text-align: center;
+        align-content: center;
+
+        .btn-contents {
+            display: inline-block;
+            height: 100%;
+            max-height: 100%;
+            width: calc(100% - 2.5em);
+            max-width: calc(100% - 2.5em);
+            overflow: hidden;
+            align-content: center;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+        }
+
+        &::after {
+            content: '+';
+            --_fa-family: var(--fa-family,var(--fa-style-family,"Font Awesome 7 Free"));
+            font-family: var(--_fa-family);
+            font-feature-settings: normal;
+            font-style: normal;
+            font-synthesis: none;
+            font-variant: normal;
+            font-weight: 900;
+            line-height: 1;
+            text-rendering: auto;
+            float: right;
+            height: 100%;
+            width: 2.5em;
+            text-align: center;
+            align-content: center;
+            margin: 0;
+            padding: 0;
+            border-left: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+        }
+    }
+
     .inspector-add-bond-select-type-btn::after {
         border-top: .3em solid;
         border-bottom: 0;

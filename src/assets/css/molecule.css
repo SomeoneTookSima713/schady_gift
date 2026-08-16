@@ -10,11 +10,14 @@
     --molecule-offset-x: 0;
     --molecule-offset-y: 0;
     margin: 0;
-    padding-top: 10vh;
     /* display: flex;
     flex-direction: column;
     justify-content: center;
     text-align: center; */
+}
+
+main.mol-container {
+    padding-top: 10vh;
 }
 
 .molecule {
@@ -158,6 +161,13 @@
         ;
 }
 
+button.invert-molecule-col .molecule .bond::before {
+    transition: filter 0.15s ease-in-out;
+}
+button.invert-molecule-col:hover .molecule .bond::before {
+    filter: invert(1);
+}
+
 /* Debugging */
 /* .bond::after {
     content: '';
@@ -200,6 +210,13 @@
 
 .bond.triple::before {
     background: url("/assets/png/triple_bond.png");
+    background-size: 100% 40%;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.bond.dotted::before {
+    background: url("/assets/png/dotted_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;

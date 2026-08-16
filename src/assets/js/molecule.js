@@ -5,7 +5,8 @@
 export const BondType = Object.freeze({
     SINGLE: "single",
     DOUBLE: "double",
-    TRIPLE: "triple"
+    TRIPLE: "triple",
+    DOTTED: "dotted"
 });
 
 // /**
@@ -43,6 +44,26 @@ export class Molecule {
     }
 
     /**
+     * Rotates all bonds inside the molecule around their root
+     * @param {number} angle 
+     */
+    rotate(angle) {
+        let stack = [];
+
+        let currVal = this.root;
+        while (currVal) {
+            for (let bond of currVal.attachedBonds) {
+                if (bond.attachedElem) {
+                    stack.push(bond.attachedElem);
+                }
+                bond.angle = (bond.angle + angle + 3600) % 360;
+            }
+
+            currVal = stack.splice(0, 1)[0];
+        }
+    }
+
+    /**
      * @param {MoleculeRenderer} renderer 
      * @returns {HTMLElement} Rendered HTML
      */
@@ -68,6 +89,14 @@ export class Molecule {
      */
     static deserialize(json) {
         return new Molecule(ChemElem.deserialize(json["root"]));
+    }
+
+    /**
+     * Returns a copy of this molecule.
+     * @returns {Molecule}
+     */
+    clone() {
+        return Molecule.deserialize(this.serialize());
     }
 }
 
@@ -268,7 +297,9 @@ export class ChemElem {
         bond_content.classList.add("elem-content");
         let bond_content_anchor = document.createElement("button");
         bond_content_anchor.innerHTML = this.name === "_" ? "" : this.nameAsHTML;
-        bond_content_anchor.onclick = globalThis.inspectChemElem.bind(undefined, this);
+        if (renderer.isMainRenderer) {
+            bond_content_anchor.onclick = globalThis.inspectChemElem.bind(undefined, this);
+        }
         bond_content.appendChild(bond_content_anchor);
         elem.appendChild(bond_content);
         if (this.charge != 0) {
@@ -419,15 +450,25 @@ export class MoleculeRenderer {
 
     /** @type {{x: number, y: number}} */
     #mol_offset = { x: 0, y: 0 };
+
+    /** @type {boolean} */
+    isMainRenderer;
+
+    /** @type {"default"|"center_horiz_root"} */
+    positioning;
     
     /**
      * @param {HTMLElement} [wrap_elem] 
+     * @param {boolean} [isMainRenderer] 
+     * @param {"default"|"center_horiz_root"} [positioning] 
      */
-    constructor(wrap_elem) {
+    constructor(wrap_elem, isMainRenderer, positioning) {
         this.html_element = (wrap_elem !== undefined) ? wrap_elem : document.createElement("div");
         this.html_element.classList.add("mol-container");
         this.html_element.style.setProperty("--molecule-offset-x", "0px");
         this.html_element.style.setProperty("--molecule-offset-y", "0px");
+        this.isMainRenderer = isMainRenderer ?? false;
+        this.positioning = positioning ?? "default";
     }
 
     /** @type {number} */
@@ -477,8 +518,16 @@ export class MoleculeRenderer {
             this.html_element.style.setProperty("--molecule-min-y", `${metrics.minY}px`);
             this.html_element.style.setProperty("--molecule-max-x", `${metrics.maxX}px`);
             this.html_element.style.setProperty("--molecule-max-y", `${metrics.maxY}px`);
-            this.html_element.style.setProperty("--molecule-initial-x", `${metrics.initialX}px`);
-            this.html_element.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
+            if (this.positioning == "default") {
+                this.html_element.style.setProperty("--molecule-initial-x", `${metrics.initialX}px`);
+                this.html_element.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
+            } else {
+                // If we want to center horizontally, we for some reason need
+                // to explicitly NOT set molecule-inital-x. Even though I wrote
+                // the positioning logic for the molecules, I have no idea why
+                // it only works in this specific way.
+                this.html_element.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
+            }
             this.html_element.style.setProperty("--molecule-width", `${metrics.width}px`);
             this.html_element.style.setProperty("--molecule-height", `${metrics.height}px`);
         } else {

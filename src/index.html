@@ -80,7 +80,7 @@
 
             <div class="inspector-add-bond">
                 <div class="dropup">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="false" aria-expanded="false">
                         Bindung hinzufügen
                     </button>
                     <div class="dropdown-menu container">
@@ -107,7 +107,7 @@
                             <input autocomplete="off" type="text" id="inspector-add-bond-elem-name" class="form-control w-auto" placeholder="Element" aria-describedby="inspectorAddBondElemName">
                         </div>
                         <div class="row ms-0 me-0" data-bond-tab="group">
-                            TODO
+                            <button class="btn btn-outline-dark inspector-add-bond-select-group invert-molecule-col"><div class="btn-contents">Klicken, um eine Gruppe auszuwählen.</div></button>
                         </div>
                         <div class="row ms-0 me-0" data-bond-tab="ring">
                             TODO
@@ -146,6 +146,31 @@
         </div>
 
         <div class="toast-container position-fixed bottom-0 end-0 p-3" id="notifications"></div>
+
+        <div class="modal fade molecule-library" id="molecule-library-base" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header d-flex">
+                        <input type="text" class="form-control molecule-library-search" placeholder="Suche">
+                        <span class="ms-3 me-1">Sortieren:</span>
+                        <select class="form-select molecule-library-sort">
+                            <option value="az" selected>A-Z</option>
+                            <option value="za">Z-A</option>
+                        </select>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body molecule-library-contents ps-0 pe-0">
+                        <button class="selectable card p-0" style="width: 12rem;">
+                            <div class="card-img-top d-flex" style="aspect-ratio: 1.5;">
+                            </div>
+                            <div class="card-body p-1 text-center border-top">
+                                E
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
     </body>

@@ -3,6 +3,7 @@ import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge, ge
 /** @import {BondAngle} from "./molecule.js" */
 import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
+import { MoleculeLibrary } from "./libraries.js";
 
 const invoke = window.__TAURI__.core.invoke;
 const listen = window.__TAURI__.event.listen;

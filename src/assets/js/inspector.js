@@ -4,6 +4,7 @@ import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge } f
 import { Translations } from "./translations.js";
 import { createButton, createNumberInput, createSelect, createSimpleElement, createTextInput, createCheckboxInput } from "./html_helper.js";
 import { NEW_BOND_PRESETS } from "./bond_presets.js";
+import { LIBRARY_SELECTOR_HTML, LIBRARY_SELECTOR_OPTIONS_PRESETS, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
 
 var PERSISTENT_ELEMS = {
     inited: false,
@@ -106,6 +107,7 @@ setInterval(() => {
 
 export function closeInspector() {
     document.getElementById("inspector").classList.remove("active");
+    bootstrap.Dropdown.getOrCreateInstance(document.querySelector("#inspector .inspector-add-bond .dropup")).hide();
     selectedElem = null;
     hightlightedElems.clear();
 }
@@ -187,6 +189,8 @@ export class InspectorBond {
      * @param {(element: ChemElem) => any} inspectElemFn  
      */
     constructor(from, to, bond, baseHtml, inspectElemFn) {
+        let isParent = bond.attachedElem === from;
+
         this.html = baseHtml.clone();
         this.fromElem = from;
         this.toElem = to;
@@ -206,11 +210,11 @@ export class InspectorBond {
             mainMoleculeRenderer.updateMoleculeSize();
         }
 
-        this.html.bondAngleInput.value = bond.angle.toString();
+        this.html.bondAngleInput.value = ((bond.angle + (isParent ? 180 : 0)) % 360).toString();
         this.html.bondAngleInput.onchange = () => {
             let num = Number.parseFloat(this.html.bondAngleInput.value);
-            num = (num + 3600) % 360;
-            this.html.bondAngleInput.value = num.toString();
+            num = (num - (isParent ? 180 : 0) + 3600) % 360;
+            this.html.bondAngleInput.value = ((num + (isParent ? 180 : 0)) % 360).toString();
             this.bond.angle = num;
             mainMoleculeRenderer.render(currentMolecule);
             mainMoleculeRenderer.updateMoleculeSize();
@@ -268,6 +272,69 @@ export class InspectorBond {
     }
 }
 
+class AddBondElementTab {
+    /** @type {HTMLElement} */
+    baseHtml;
+    
+    /** @type {HTMLInputElement} */
+    elemNameInput;
+
+    /**
+     * @param {HTMLElement} baseHtml 
+     */
+    constructor(baseHtml) {
+        this.baseHtml = baseHtml;
+        this.elemNameInput = baseHtml.querySelector("#inspector-add-bond-elem-name");
+    }
+}
+
+class AddBondGroupTab {
+    /** @type {HTMLElement} */
+    baseHtml;
+
+    /** @type {HTMLButtonElement} */
+    elemGroupSelectBtn;
+
+    /** @type {Molecule?} */
+    selectedBondGroup;
+
+    constructor(baseHtml) {
+        this.baseHtml = baseHtml;
+        this.elemGroupSelectBtn = baseHtml.querySelector(".inspector-add-bond-select-group");
+        this.elemGroupSelectBtn.onclick = () => {
+            MoleculeLibrary.load("bonds").then(lib => {
+                let opts = LIBRARY_SELECTOR_OPTIONS_PRESETS.BOND_SELECTOR;
+                let selector = new MoleculeLibrarySelector(lib, LIBRARY_SELECTOR_HTML, opts);
+                selector.open(mol => {
+                    this.selectedBondGroup = mol;
+                    this.elemGroupSelectBtn.querySelector(".btn-contents").replaceChildren();
+                    let molRenderer = new MoleculeRenderer(this.elemGroupSelectBtn.querySelector(".btn-contents"), false, "center_horiz_root");
+                    opts.moleculeRenderModifier.pre(mol);
+                    molRenderer.render(mol);
+                    opts.moleculeRenderModifier.post(mol);
+                    molRenderer.updateMoleculeSize();
+                });
+            });
+        };
+    }
+}
+
+class AddBondRingTab {
+    /** @type {HTMLElement} */
+    baseHtml;
+
+    constructor(baseHtml) {
+        this.baseHtml = baseHtml;
+        // TODO
+    }
+}
+
+const ELEM_TYPE_TO_CLASS = Object.freeze({
+    element: AddBondElementTab,
+    group: AddBondGroupTab,
+    ring: AddBondRingTab
+});
+
 export class InspectorAddBondDropdown {
     /** @type {HTMLElement} */
     baseHtml;
@@ -296,17 +363,83 @@ export class InspectorAddBondDropdown {
     /** @type {HTMLInputElement} */
     bondChangeAngleCheck;
 
-    /** @type {{[string]: HTMLElement}} */
+    /** @type {{"element": AddBondElementTab, "group": AddBondGroupTab, "ring": AddBondRingTab}} */
     bondElemTypeTabs;
 
     /** @type {BondType} */
     selectedBondType = BondType.SINGLE;
+    
+    /** @type {"element"|"group"|"ring"} */
+    selectedElemType = "element";
+
+    /** @type {ChemElem} */
+    currentElem;
+
+    /** @type {(elem: ChemElem) => any} */
+    inspectElemFn;
+
+    /** @type {number} */
+    get bondAngle() {
+        return Number.parseFloat(this.bondAngleInput.value);
+    }
+
+    /** @type {number} */
+    get bondLength() {
+        return Number.parseFloat(this.bondLengthInput.value);
+    }
+
+    #addBond() {
+        let canInspect = true;
+        switch (this.selectedElemType) {
+            case "element":
+                let elemName = this.bondElemTypeTabs.element.elemNameInput.value;
+                canInspect &= elemName.length > 0;
+                this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elemName.length > 0 ? elemName : undefined);
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
+                break;
+            case "group":
+                let elem = this.bondElemTypeTabs.group.selectedBondGroup;
+                if (elem === null) { return; }
+                elem = elem.clone();
+                elem.rotate(this.bondAngle);
+                this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elem.root);
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
+                break;
+            case "ring":
+                // TODO
+                break;
+        }
+        if (this.bondChangeAngleCheck.checked) {
+            /** @type {number} */
+            let newAngle = this.bondAngle;
+            let bondCount = this.currentElem.attachedBonds.length;
+            if (bondCount < 8 && bondCount != 4) {
+                newAngle += 90;
+            } else if (bondCount == 4) {
+                newAngle += 45;
+            } else if (bondCount == 8) {
+                newAngle += 15;
+            } else {
+                newAngle += 30;
+            }
+            this.bondAngleInput.value = (newAngle % 360).toString();
+        }
+        if (this.bondSelectElemCheck.checked && canInspect) {
+            this.inspectElemFn(this.currentElem.attachedBonds[this.currentElem.attachedBonds.length - 1].attachedElem);
+        } else {
+            this.inspectElemFn(this.currentElem);
+        }
+    }
 
     /**
      * @param {HTMLElement} baseHtml 
+     * @param {(elem: ChemElem) => any} inspectElemFn 
      * @param {boolean} [skipInit]
      */
-    constructor(baseHtml, skipInit) {
+    constructor(baseHtml, inspectElemFn, skipInit) {
+        this.inspectElemFn = inspectElemFn;
         this.baseHtml = baseHtml;
         this.bondElemTypeBtns = Array.from(baseHtml.querySelector(".add-bond-elem-type").querySelectorAll("input[type=\"radio\"]"));
         this.bondAngleInput = baseHtml.querySelector(".add-bond-angle");
@@ -319,13 +452,16 @@ export class InspectorAddBondDropdown {
         this.bondLengthInput = baseHtml.querySelector(".inspector-add-bond-length");
         this.bondSelectElemCheck = baseHtml.querySelector("#inspector-add-bond-select");
         this.bondChangeAngleCheck = baseHtml.querySelector("#inspector-add-bond-inc-angle");
-        this.bondElemTypeTabs = Object.fromEntries(Array.from(baseHtml.querySelectorAll(".row[data-bond-tab]")).map(elem => [elem.getAttribute("data-bond-tab"), elem]));
+        this.bondElemTypeTabs = Object.fromEntries(Array.from(baseHtml.querySelectorAll(".row[data-bond-tab]")).map(elem => [elem.getAttribute("data-bond-tab"), new ELEM_TYPE_TO_CLASS[elem.getAttribute("data-bond-tab")](elem)]));
 
         if (!skipInit) {
             this.bondElemTypeBtns.forEach(btn => {
                 btn.onchange = () => {
-                    Object.values(this.bondElemTypeTabs).forEach(t => t.classList.remove("show"));
-                    this.bondElemTypeTabs[btn.value].classList.add("show");
+                    Object.values(this.bondElemTypeTabs).forEach(t => {
+                        t.baseHtml.classList.remove("show");
+                    });
+                    this.bondElemTypeTabs[btn.value].baseHtml.classList.add("show");
+                    this.selectedElemType = btn.value;
                 };
             });
             this.bondAngleInput.value = "0";
@@ -346,6 +482,11 @@ export class InspectorAddBondDropdown {
                 let num = Number.parseFloat(this.bondLengthInput.value);
                 num = Math.min(Math.max(num, 0.25), 4);
                 this.bondLengthInput.value = num.toString();
+            };
+            this.addBondBtn.onclick = () => this.#addBond();
+            this.closeBtn.onclick = () => {
+                let dropdown = bootstrap.Dropdown.getOrCreateInstance(baseHtml.parentElement);
+                dropdown.hide();
             };
         }
     }
@@ -389,7 +530,7 @@ export class InspectorHTML {
             this.bondBase = (new InspectorBondHTML(this.bondList.children[0])).clone();
         }
         baseHtml.querySelector(".inspector-bonds").replaceChildren();
-        this.addBondDropdown = new InspectorAddBondDropdown(this.baseHtml.querySelector(".inspector-add-bond > div > .dropdown-menu"));
+        this.addBondDropdown = new InspectorAddBondDropdown(this.baseHtml.querySelector(".inspector-add-bond > div > .dropdown-menu"), null);
     }
 
     /**
@@ -399,14 +540,17 @@ export class InspectorHTML {
     clone() {
         let html = new InspectorHTML(this.baseHtml.cloneNode(true));
         html.bondBase = this.bondBase.clone();
+        html.addBondDropdown = this.addBondDropdown;
         html.baseHtml.querySelector(".inspector-add-bond > div > .dropdown-menu").replaceWith(this.addBondDropdown.baseHtml);
         return html;
     }
 
     /**
      * @param {HTMLElement} container 
+     * @param {(elem: ChemElem) => any} inspectElemFn 
      */
-    insertInto(container) {
+    insertInto(container, inspectElemFn) {
+        this.addBondDropdown.inspectElemFn = inspectElemFn;
         container.replaceChildren(...this.baseHtml.childNodes);
     }
 }
@@ -455,12 +599,20 @@ export class InspectorWindow {
         if (this.element.parentElem !== null) {
             this.html.deleteBtns.partial.onclick = () => {
                 this.element.parentBond.attachedElem = undefined;
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
                 closeInspector();
             };
             this.html.deleteBtns.full.onclick = () => {
                 this.element.unattachSelf();
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
                 closeInspector();
             };
+            this.html.deleteBtns.partial.classList.remove("disabled");
+            this.html.deleteBtns.partial.title = "";
+            this.html.deleteBtns.full.classList.remove("disabled");
+            this.html.deleteBtns.full.title = "";
         } else {
             this.html.deleteBtns.partial.classList.add("disabled");
             this.html.deleteBtns.partial.title = Translations.TEXTS.INSPECTOR_ELEM_CANNOT_REMOVE;
@@ -477,7 +629,9 @@ export class InspectorWindow {
             inspectorBond.insertInto(this.html.bondList);
         }
 
-        this.html.insertInto(container);
+        this.html.addBondDropdown.currentElem = this.element;
+
+        this.html.insertInto(container, this.inspectElemFn);
         container.classList.add("active");
     }
 }
@@ -493,7 +647,7 @@ var selectedElem = null;
 /** @type {Set<ChemElem>} */
 var hightlightedElems = new Set();
 /** @type {MoleculeRenderer} */
-export var mainMoleculeRenderer = new MoleculeRenderer(document.getElementById("main_container"));
+export var mainMoleculeRenderer = new MoleculeRenderer(document.getElementById("main_container"), true);
 
 /**
  * @returns {Molecule}
