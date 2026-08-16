@@ -22,3 +22,7 @@
 body {
     height: 100vh;
 }
+
+.btn-like {
+    pointer-events: none !important;
+}

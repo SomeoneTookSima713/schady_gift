@@ -10,7 +10,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Tauri App</title>
         <script type="module" src="/assets/js/main.js" defer></script>
-
+        
+        <link rel="stylesheet" href="/assets/fontawesome/css/fontawesome.min.css" />
+        <link rel="stylesheet" href="/assets/fontawesome/css/regular.min.css" />
+        <link rel="stylesheet" href="/assets/fontawesome/css/solid.min.css" />
         <link rel="stylesheet" href="/assets/bootstrap/bootstrap.min.css" />
     </head>
     <body>
@@ -22,20 +25,123 @@
         </div>
         <main class="container-fluid h-100 mol-container" id="main_container">
         </main>
-        <div id="inspector">
-            <button id="inspector-close">Schließen</button>
-            <h3>Allgemeine Daten</h3>
-            <label>Atom/Gruppe:</label> <input autocomplete="off" id="inspector-name" type="text" /> <br>
-            <label>Ladung:</label> <input autocomplete="off" id="inspector-charge" type="number" max="10" min="-10" /> <br>
-            <button id="inspector-remove-elem">Element entfernen (behält Bindung bei)</button>
+        <div id="inspector" class="container active">
+            <div class="row pb-3">
+                <div class="col">
+                    <button id="inspector-close" class="btn-close display-inline-block" aria-label="Close"></button>
+                </div>
+            </div>
+            <h3 class="w-100 text-center position-absolute start-0" style="top: calc(12pt - 0.15rem - .3vw);">
+                Element
+            </h3>
+            <input autocomplete="off" type="text" id="inspector-name" class="form-control text-center" aria-describedby="inspectorElemName">
+            <div id="inspector-remove-btns" class="btn-group pt-2 pb-4" role="group" aria-label="Delete Buttons">
+                <div class="btn btn-outline-danger btn-like" tabindex="-1"><i class="fa-regular fa-trash-can"></i></div>
+                <button id="inspector-remove-elem" class="btn btn-danger" style="width: stretch;"><img src="/assets/png/delete_elem.png"></button>
+                <button id="inspector-remove-elem-full" class="btn btn-danger" style="width: stretch;"><img src="/assets/png/delete_binding.png"></button>
+            </div>
 
             <h3>Bindungen</h3>
-            <div id="inspector-bonds">
-                <select class="inspector-bond-select-type">
-                    <option value="single">Einfach</option>
-                    <option value="double">Zweifach</option>
-                    <option value="triple">Dreifach</option>
-                </select>
+            <div class="inspector-bonds container">
+                <div class="inspector-bond row justify-content-around">
+                    <button class="inspector-bond-elem-name btn btn-outline-dark col-2 text-center ps-1 pe-1">CH<sub>2</sub>OH</button>
+                    <div class="dropdown col-4 p-0">
+                        <button class="inspector-bond-dropdown btn btn-outline-dark dropdown-toggle m-0 w-100 text-end" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                            1,0 <img src="/assets/png/single_bond.png">
+                        </button>
+                        <div class="dropdown-menu p-2 container">
+                            <div class="row mb-2">
+                                <div class="col-5 d-inline-flex flex-column justify-content-center">Art:</div>
+                                <div class="dropdown col-7">
+                                    <button class="inspector-bond-select-type-btn btn btn-outline-dark dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <img src="/assets/png/single_bond.png">
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" data-bond="single"><img src="/assets/png/single_bond.png"></a></li>
+                                        <li><a class="dropdown-item" data-bond="double"><img src="/assets/png/double_bond.png"></a></li>
+                                        <li><a class="dropdown-item" data-bond="triple"><img src="/assets/png/triple_bond.png"></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-5 d-inline-flex flex-column justify-content-center">Länge:</div>
+                                <div class="col-7">
+                                    <input autocomplete="off" type="number" class="inspector-bond-length form-control" min="0.25" max="4" step="0.25">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3 p-0">
+                        <input autocomplete="off" type="number" class="inspector-bond-angle form-control text-end angle-input" min="-15" max="360" step="15">
+                    </div>
+                    <button class="inspector-bond-elem-remove btn btn-outline-danger col-2 p-0"><i class="fa-regular fa-trash-can"></i></button>
+                </div>
+            </div>
+
+            <div class="inspector-add-bond">
+                <div class="dropup">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                        Bindung hinzufügen
+                    </button>
+                    <div class="dropdown-menu container">
+                        <div class="row m-0">
+                            <div class="add-bond-elem-type btn-group col-7" role="group">
+                                <input type="radio" class="btn-check" name="btnradiobondtype" id="add-bond-type-element" value="element" autocomplete="off" checked>
+                                <label class="btn btn-outline-secondary" for="add-bond-type-element">Element</label>
+
+                                <input type="radio" class="btn-check" name="btnradiobondtype" id="add-bond-type-group" value="group" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="add-bond-type-group">Gruppe</label>
+                                
+                                <input type="radio" class="btn-check" name="btnradiobondtype" id="add-bond-type-ring" value="ring" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="add-bond-type-ring">Ring</label>
+                            </div>
+                            <div class="col-3">
+                                <input autocomplete="off" type="number" class="add-bond-angle form-control text-end angle-input" min="-15" max="360" step="15">
+                            </div>
+                            <div class="col-2 btn-group p-0">
+                                <button class="add-bond-add btn p-0 text-center text-success"><i class="fa-solid fa-plus"></i></button>
+                                <button class="add-bond-close btn p-0 text-center text-danger"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                        <div class="row ms-0 me-0 show" data-bond-tab="element">
+                            <input autocomplete="off" type="text" id="inspector-add-bond-elem-name" class="form-control w-auto" placeholder="Element" aria-describedby="inspectorAddBondElemName">
+                        </div>
+                        <div class="row ms-0 me-0" data-bond-tab="group">
+                            TODO
+                        </div>
+                        <div class="row ms-0 me-0" data-bond-tab="ring">
+                            TODO
+                        </div>
+                        <hr class="m-2">
+                        <div class="row ms-0 mb-1">
+                            <div class="col-2 d-inline-flex flex-column justify-content-center">Art:</div>
+                            <div class="dropdown col-3">
+                                <button class="inspector-add-bond-select-type-btn btn btn-outline-dark dropdown-toggle w-100 text-end" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="/assets/png/single_bond.png">
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" data-bond="single"><img src="/assets/png/single_bond.png"></a></li>
+                                    <li><a class="dropdown-item" data-bond="double"><img src="/assets/png/double_bond.png"></a></li>
+                                    <li><a class="dropdown-item" data-bond="triple"><img src="/assets/png/triple_bond.png"></a></li>
+                                </ul>
+                            </div>
+                            <label class="col-7 align-content-center form-check-label" for="inspector-add-bond-select">
+                                <input class="form-check-input" type="checkbox" id="inspector-add-bond-select">
+                                Element auswählen
+                            </label>
+                        </div>
+                        <div class="row ms-0">
+                            <div class="col-2 d-inline-flex flex-column justify-content-center">Länge:</div>
+                            <div class="col-3">
+                                <input autocomplete="off" type="number" class="inspector-add-bond-length form-control" min="0.25" max="4" step="0.25">
+                            </div>
+                            <label class="col-7 align-content-center form-check-label" for="inspector-add-bond-inc-angle">
+                                <input class="form-check-input" type="checkbox" id="inspector-add-bond-inc-angle">
+                                Winkel automatisch anpassen
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -1,7 +1,7 @@
 import { Translations } from "./translations.js";
 import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge, getMoleculeSize } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
-import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer } from "./inspector.js";
+import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
 
 const invoke = window.__TAURI__.core.invoke;
@@ -28,13 +28,15 @@ globalThis.waitForElm = function(selector) {
     });
 }
 
+let inspectorBaseHtml = new InspectorHTML(document.getElementById("inspector"));
+
 /**
  * @param {ChemElem} element
  */
 globalThis.inspectChemElem = function(element) {
     let inspector = document.getElementById("inspector");
     
-    let window = new InspectorWindow(element, inspectChemElem);
+    let window = new InspectorWindow(element, inspectorBaseHtml, inspectChemElem);
 
     window.openAndRender(inspector);
 }

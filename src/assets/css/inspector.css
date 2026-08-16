@@ -2,7 +2,7 @@
     position: fixed;
     right: 0;
     top: 0;
-    width: 300px;
+    width: 320px;
     height: 100vh;
     background-color: beige;
     transition: transform 0.25s ease-in-out;
@@ -13,101 +13,111 @@
     flex-direction: column;
 
     transform: translateX(100%);
+
+    div:has(> .angle-input)::after {
+        display: block;
+        content: '°';
+        float: right;
+        position: relative;
+        top: -33px;
+        right: 21px;
+        height: 0;
+        overflow: visible;
+        pointer-events: none;
+    }
+    
+    div:has(> .angle-input:hover, > .angle-input:focus)::after {
+        display: block;
+        opacity: 0;
+    }
+
+    > h3 {
+        pointer-events: none;
+    }
 }
 #inspector.active {
     transform: none;
 }
 
-#inspector .inspector-general {
-    justify-self: flex-start;
-
-    input {
-        width: 55%;
-        float: right;
-    }
-}
 #inspector .inspector-bonds {
-    justify-self: flex-start;
+    /* justify-self: flex-start; */
     height: stretch;
     min-height: 0;
     overflow: hidden;
 
-    .inspector-bonds-list {
-        height: stretch;
-        overflow: hidden scroll;
-        min-height: 0;
+    .inspector-bond {
+        margin-bottom: 4px;
+
+        button img, a img {
+            height: 24px;
+            transition: filter 0.15s ease-in-out;
+        }
+
+        .inspector-bond-elem-name {
+            overflow-x: hidden;
+        }
+
+        .inspector-bond-dropdown img {
+            margin-left: 0.2rem;
+        }
+
+        .btn-outline-dark:hover > img, .btn-outline-dark.show > img {
+            filter: invert(1);
+        }
+
+        .inspector-bond-angle {
+            height: stretch;
+        }
     }
 }
+
+#inspector-remove-btns .btn.btn-danger {
+    width: stretch;
+
+    img {
+        height: 24px;
+    }
+}
+
+#inspector-remove-btns > button.disabled {
+    pointer-events: all;
+    cursor: default;
+}
+
 #inspector .inspector-add-bond {
-    margin-top: auto;
-    justify-self: flex-end;
-
-    h4 {
-        margin-block-end: 0;
-        margin-inline-end: 0;
+    > div > .dropdown-menu {
+        width: 500px;
+        height: 300px;
+        &.show {
+            display: flex;
+            flex-direction: column;
+        }
     }
 
-    label {
-        width: 40%;
+    .row[data-bond-tab] {
+        display: none;
     }
 
-    select {
-        width: 50%;
-        float: right;
+    .row.show[data-bond-tab] {
+        display: flex;
+        height: stretch;
     }
 
-    input {
-        float: right;
-    }
-}
-
-.inspector-bond {
-    margin-bottom: 4pt;
-
-    label {
-        display: inline-block;
-        vertical-align: text-top;
+    .row[data-bond-tab] input[type="text"] {
+        height: fit-content;
     }
 
-    select {
-        width: 40%;
-        float: right;
+    #inspector-add-bond-elem-name {
+        margin-top: .75rem;
+        margin-left: .75rem;
     }
 
-    input {
-        box-sizing: border-box;
-        float: right;
-        width: 40%;
+    .inspector-add-bond-select-type-btn::after {
+        border-top: .3em solid;
+        border-bottom: 0;
     }
-}
 
-.inspector-bond * {
-    margin-right: 4pt !important;
-    height: 20pt !important;    
-}
-
-.inspector-bond button.inspector-bond-elem-name {
-    padding: 0;
-    padding-left: 2pt;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-    display: inline-block;
-    width: 20%;
-    overflow: hidden;
-    text-align: left;
-    font-weight: 600;
-}
-
-.inspector-bond button.inspector-bond-new-elem {
-    padding: 0;
-    padding-left: 2pt;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-    display: inline-block;
-    width: 20%;
-    overflow: hidden;
-    text-align: left;
-    /* font-weight: 500; */
+    li a img, .inspector-add-bond-select-type-btn img {
+        height: 24px;
+    }
 }
