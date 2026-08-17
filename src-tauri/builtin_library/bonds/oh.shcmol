@@ -1,0 +1,5 @@
+{
+    "name": "OH",
+    "category": "functional_groups",
+    "root":{"name":"O","partialCharge":null,"charge":0,"attachedBonds":[{"bondType":"single","bondAngle":0,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}}]}
+}

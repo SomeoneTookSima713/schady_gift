@@ -27,6 +27,16 @@ export const BondType = Object.freeze({
  * @readonly
  * @enum {string}
  */
+export const MoleculePositioning = Object.freeze({
+    DEFAULT: "default",
+    CENTER_HORIZ_ROOT: "center_horiz_root",
+    CENTER_HORIZ_MOLECULE: "center_horiz_molecule"
+});
+
+/**
+ * @readonly
+ * @enum {string}
+ */
 export const PartialCharge = Object.freeze({
     POSITIVE: "positive",
     NEGATIVE: "negative"
@@ -141,11 +151,11 @@ export class Bond {
                 bond_elem.style.setProperty("--bond-attached-elem-width", "12.16px");
                 bond_elem.style.setProperty("--bond-attached-elem-height", "24px");
             } else {
-                waitForElm(`#${child.id}`).then(elem => {
+                renderer.waiting_on_promises.push(waitForElm(`#${child.id}`).then(elem => {
                     bond_elem.style.setProperty("--bond-attached-elem-width", `${child.getElementsByClassName("elem-content")[0].getBoundingClientRect().width}px`);
                     bond_elem.style.setProperty("--bond-attached-elem-height", `${child.getElementsByClassName("elem-content")[0].getBoundingClientRect().height}px`);
-                    renderer.updateMoleculeSize();
-                });
+                    return renderer.updateMoleculeSize();
+                }));
             }
         } else {
             bond_elem.style.setProperty("--bond-attached-elem-width", "12.16px");
@@ -450,17 +460,23 @@ export class MoleculeRenderer {
 
     /** @type {{x: number, y: number}} */
     #mol_offset = { x: 0, y: 0 };
+    
+    /** @type {{x: number, y: number}} */
+    #internal_mol_offset = { x: 0, y: 0 };
+
+    /** @type {Promise<MoleculeMetrics?>[]} */
+    waiting_on_promises = [];
 
     /** @type {boolean} */
     isMainRenderer;
 
-    /** @type {"default"|"center_horiz_root"} */
+    /** @type {MoleculePositioning} */
     positioning;
     
     /**
      * @param {HTMLElement} [wrap_elem] 
      * @param {boolean} [isMainRenderer] 
-     * @param {"default"|"center_horiz_root"} [positioning] 
+     * @param {MoleculePositioning} [positioning] 
      */
     constructor(wrap_elem, isMainRenderer, positioning) {
         this.html_element = (wrap_elem !== undefined) ? wrap_elem : document.createElement("div");
@@ -468,7 +484,7 @@ export class MoleculeRenderer {
         this.html_element.style.setProperty("--molecule-offset-x", "0px");
         this.html_element.style.setProperty("--molecule-offset-y", "0px");
         this.isMainRenderer = isMainRenderer ?? false;
-        this.positioning = positioning ?? "default";
+        this.positioning = positioning ?? MoleculePositioning.DEFAULT;
     }
 
     /** @type {number} */
@@ -484,13 +500,13 @@ export class MoleculeRenderer {
     /** @type {number} */
     set molecule_offset_x(value) {
         this.#mol_offset.x = value;
-        this.html_element.style.setProperty("--molecule-offset-x", `${this.#mol_offset.x}px`);
+        this.html_element.style.setProperty("--molecule-offset-x", `${this.#mol_offset.x + this.#internal_mol_offset.x}px`);
     }
     
     /** @type {number} */
     set molecule_offset_y(value) {
         this.#mol_offset.y = value;
-        this.html_element.style.setProperty("--molecule-offset-y", `${this.#mol_offset.y}px`);
+        this.html_element.style.setProperty("--molecule-offset-y", `${this.#mol_offset.y + this.#internal_mol_offset.y}px`);
     }
 
     /**
@@ -501,6 +517,7 @@ export class MoleculeRenderer {
      * previously rendered molecule.
      * 
      * @param {Molecule} [molecule]
+     * @return {Promise<MoleculeMetrics?>?} Resolves after final sizing updates
      */
     render(molecule) {
         for (let child of this.html_element.children) {
@@ -508,9 +525,16 @@ export class MoleculeRenderer {
         }
         if (molecule !== undefined) {
             this.html_element.appendChild(molecule.render(this));
+            return Promise.all(this.waiting_on_promises).then(_ => {
+                return this.updateMoleculeSize();
+            });
         }
+        return null;
     }
 
+    /**
+     * @returns {MoleculeMetrics?}
+     */
     updateMoleculeSize() {
         if (this.html_element.children.length > 0) {
             let metrics = getMoleculeSize(this.html_element.children[0]);
@@ -518,7 +542,7 @@ export class MoleculeRenderer {
             this.html_element.style.setProperty("--molecule-min-y", `${metrics.minY}px`);
             this.html_element.style.setProperty("--molecule-max-x", `${metrics.maxX}px`);
             this.html_element.style.setProperty("--molecule-max-y", `${metrics.maxY}px`);
-            if (this.positioning == "default") {
+            if (this.positioning != MoleculePositioning.CENTER_HORIZ_ROOT) {
                 this.html_element.style.setProperty("--molecule-initial-x", `${metrics.initialX}px`);
                 this.html_element.style.setProperty("--molecule-initial-y", `${metrics.initialY}px`);
             } else {
@@ -530,6 +554,13 @@ export class MoleculeRenderer {
             }
             this.html_element.style.setProperty("--molecule-width", `${metrics.width}px`);
             this.html_element.style.setProperty("--molecule-height", `${metrics.height}px`);
+
+            if (this.positioning == MoleculePositioning.CENTER_HORIZ_MOLECULE) {
+                this.#internal_mol_offset = { x: -0.5 * metrics.width, y: 0 };
+                this.html_element.style.setProperty("--molecule-offset-x", `${this.#mol_offset.x + this.#internal_mol_offset.x}px`);
+                this.html_element.style.setProperty("--molecule-offset-y", `${this.#mol_offset.y + this.#internal_mol_offset.y}px`);
+            }
+            return metrics;
         } else {
             this.html_element.style.setProperty("--molecule-min-x", '0px');
             this.html_element.style.setProperty("--molecule-min-y", '0px');
@@ -539,6 +570,10 @@ export class MoleculeRenderer {
             this.html_element.style.setProperty("--molecule-initial-y", '0px');
             this.html_element.style.setProperty("--molecule-width", '1px');
             this.html_element.style.setProperty("--molecule-height", '1px');
+            if (this.positioning == MoleculePositioning.CENTER_HORIZ_MOLECULE) {
+                this.#internal_mol_offset = { x: 0, y: 0 };
+            }
+            return null;
         }
     }
 }

@@ -4,7 +4,16 @@ use tauri::path::BaseDirectory;
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct LibraryEntry {
     pub name: String,
+    pub category: Option<String>,
+    pub auto_select: Option<Vec<i32>>,
     pub molecule_contents: serde_json::Value
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct LibraryInfo {
+    name: String,
+    category: Option<String>,
+    auto_select: Option<Vec<i32>>
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -20,10 +29,13 @@ impl Library {
         let entries = std::fs::read_dir(app_handle.path().resolve(format!("builtin_library/{id}"), BaseDirectory::Resource)?)?
             .map(|d| {
                 let json_value: serde_json::Value = serde_json::from_reader(std::fs::OpenOptions::new().read(true).open(d?.path())?)?;
-                let name = json_value.as_object().ok_or(tauri::Error::Anyhow(anyhow::anyhow!("Invalid JSON!")))?
-                    .get("name").ok_or(tauri::Error::Anyhow(anyhow::anyhow!("Invalid JSON!")))?
-                    .as_str().ok_or(tauri::Error::Anyhow(anyhow::anyhow!("Invalid JSON!")))?.to_string();
-                Ok::<LibraryEntry, tauri::Error>(LibraryEntry { name, molecule_contents: json_value })
+                let info: LibraryInfo = serde_json::from_value(json_value.clone())?;
+                Ok::<LibraryEntry, tauri::Error>(LibraryEntry {
+                    name: info.name,
+                    category: info.category,
+                    auto_select: info.auto_select,
+                    molecule_contents: json_value
+                })
             }).collect::<Result<Vec<_>, _>>()?;
 
         Ok(Library { id, entries })

@@ -1,0 +1,5 @@
+{
+    "name": "CH_2",
+    "category": "carbon_chain",
+    "root":{"name":"C","partialCharge":null,"charge":0,"attachedBonds":[{"bondType":"single","bondAngle":90,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":270,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}}]}
+}

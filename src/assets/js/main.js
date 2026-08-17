@@ -1,9 +1,9 @@
 import { Translations } from "./translations.js";
-import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge, getMoleculeSize } from "./molecule.js";
+import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRenderer, PartialCharge, getMoleculeSize } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
 import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
-import { MoleculeLibrary } from "./libraries.js";
+import { LIBRARY_SELECTOR_HTML, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
 
 const invoke = window.__TAURI__.core.invoke;
 const listen = window.__TAURI__.event.listen;
@@ -73,7 +73,7 @@ function saveMolecule() {
         });
 }
 
-function loadMolecule() {
+function loadMoleculeFromFile() {
     invoke('load_molecule')
         .then((/** @type {string} */ json) => {
             let molecule = Molecule.deserialize(JSON.parse(json));
@@ -106,6 +106,20 @@ function loadMolecule() {
                 throw error;
             }
         })
+}
+
+function loadMoleculeFromLibrary() {
+    MoleculeLibrary.load("molecules").then(lib => {
+        let selector = new MoleculeLibrarySelector(lib, LIBRARY_SELECTOR_HTML, { moleculePositioningValue: MoleculePositioning.CENTER_HORIZ_MOLECULE });
+        selector.open(mol => {
+            pushNotification(
+                Translations.NOTIFICATIONS.TITLE_LOAD,
+                Translations.NOTIFICATIONS.MSG_LOAD_COMPLETED,
+                false, true
+            );
+            setCurrentMolecule(mol);
+        });
+    });
 }
 
 function exportMolecule() {
@@ -157,7 +171,8 @@ function exportMolecule() {
 
 window.onload = () => {
     document.getElementById("options-save-molecule").onclick = saveMolecule;
-    document.getElementById("options-load-molecule").onclick = loadMolecule;
+    document.getElementById("options-load-molecule-from-file").onclick = loadMoleculeFromFile;
+    document.getElementById("options-load-molecule-from-library").onclick = loadMoleculeFromLibrary;
     document.getElementById("options-export-molecule").onclick = exportMolecule;
     document.getElementById("options-reset-molecule").onclick = () => setCurrentMolecule(new Molecule("C"));
 };

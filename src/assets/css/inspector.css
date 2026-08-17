@@ -79,7 +79,7 @@
     }
 }
 
-#inspector-remove-btns > button.disabled {
+#inspector button.disabled {
     pointer-events: all;
     cursor: default;
 }
@@ -107,9 +107,19 @@
         height: fit-content;
     }
 
-    #inspector-add-bond-elem-name {
+    .row[data-bond-tab="element"] .inspector-add-bond-elem-name {
         margin-top: .75rem;
         margin-left: .75rem;
+    }
+
+    .row[data-bond-tab="ring"] {
+        padding: .75rem;
+
+        .col-6 {
+            display: flex;
+            align-items: center;
+            column-gap: 0.75rem;
+        }
     }
 
     .inspector-add-bond-select-group {

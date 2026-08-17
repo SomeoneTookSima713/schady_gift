@@ -18,10 +18,18 @@
     </head>
     <body>
         <div class="container-fluid position-fixed top-0 start-0 px-1 py-1" id="options-bar">
-            <button class="btn me-1 btn-outline-dark" id="options-save-molecule">Molekül Speichern</button>
-            <button class="btn me-1 btn-outline-dark" id="options-load-molecule">Molekül Laden</button>
-            <button class="btn me-1 btn-outline-dark" id="options-export-molecule">Molekül als Bild Exportieren</button>
-            <button class="btn me-1 btn-outline-dark" id="options-reset-molecule">Neues Molekül</button>
+            <button class="btn me-1 btn-outline-dark btn-sm" id="options-save-molecule">Molekül Speichern</button>
+            <div class="d-inline-block dropdown">
+                <button class="btn me-1 btn-outline-dark btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Molekül Laden
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" id="options-load-molecule-from-file">Aus Datei</a></li>
+                    <li><a class="dropdown-item" href="#" id="options-load-molecule-from-library">Aus Bibliothek</a></li>
+                </ul>
+            </div>
+            <button class="btn me-1 btn-outline-dark btn-sm" id="options-export-molecule">Molekül als Bild Exportieren</button>
+            <button class="btn me-1 btn-outline-dark btn-sm" id="options-reset-molecule">Neues Molekül</button>
         </div>
         <main class="container-fluid h-100 mol-container" id="main_container">
         </main>
@@ -104,13 +112,24 @@
                             </div>
                         </div>
                         <div class="row ms-0 me-0 show" data-bond-tab="element">
-                            <input autocomplete="off" type="text" id="inspector-add-bond-elem-name" class="form-control w-auto" placeholder="Element" aria-describedby="inspectorAddBondElemName">
+                            <input autocomplete="off" type="text" class="inspector-add-bond-elem-name form-control w-auto" placeholder="Element">
                         </div>
                         <div class="row ms-0 me-0" data-bond-tab="group">
                             <button class="btn btn-outline-dark inspector-add-bond-select-group invert-molecule-col"><div class="btn-contents">Klicken, um eine Gruppe auszuwählen.</div></button>
                         </div>
                         <div class="row ms-0 me-0" data-bond-tab="ring">
-                            TODO
+                            <div class="col-6">
+                                <input autocomplete="off" type="text" class="inspector-add-bond-elem-name form-control w-auto" placeholder="Element">
+                            </div>
+                            <label class="col-6" for="inspector-add-bond-ring-size">
+                                Größe:
+                                <input autocomplete="off" type="number" min="3" max="18" id="inspector-add-bond-ring-size" class="form-control">
+                            </label>
+                            <div class="col-6"></div>
+                            <label class="col-6" for="inspector-add-bond-ring-bond-count">
+                                Bindungen:
+                                <input autocomplete="off" type="number" min="3" max="18" id="inspector-add-bond-ring-bond-count" class="form-control">
+                            </label>
                         </div>
                         <hr class="m-2">
                         <div class="row ms-0 mb-1">
@@ -156,6 +175,8 @@
                         <select class="form-select molecule-library-sort">
                             <option value="az" selected>A-Z</option>
                             <option value="za">Z-A</option>
+                            <option value="category_az">Kategorie (A-Z)</option>
+                            <option value="category_za">Kategorie (Z-A)</option>
                         </select>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -166,6 +187,7 @@
                             <div class="card-body p-1 text-center border-top">
                                 E
                             </div>
+                            <span class="position-absolute top-0 end-0 mt-1 me-1 opacity-50 badge text-bg-dark selectable-category">Kategorie</span>
                         </button>
                     </div>
                 </div>

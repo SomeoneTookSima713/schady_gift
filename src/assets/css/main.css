@@ -23,6 +23,10 @@ body {
     height: 100vh;
 }
 
+#main_container {
+    overflow: hidden;
+}
+
 .btn-like {
     pointer-events: none !important;
 }
@@ -45,7 +49,12 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, 12rem);
     grid-auto-rows: min-content;
+    gap: 1.5rem 1.5rem;
     justify-content: space-evenly;
+
+    .category-title {
+        grid-column: 1/-1;
+    }
 
     .selectable {
         transition: filter 0.15s ease-in-out;

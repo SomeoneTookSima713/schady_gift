@@ -1,4 +1,5 @@
 {
     "name": "COOH",
+    "category": "functional_groups",
     "root":{"name":"C","partialCharge":null,"charge":0,"attachedBonds":[{"bondType":"double","bondAngle":315,"bondLength":1,"attachedElement":{"name":"O","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":45,"bondLength":1,"attachedElement":{"name":"OH","partialCharge":null,"charge":0,"attachedBonds":[]}}]}
 }

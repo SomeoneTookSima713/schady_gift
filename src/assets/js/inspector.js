@@ -1,4 +1,4 @@
-import { Bond, BondType, ChemElem, Molecule, MoleculeRenderer, PartialCharge } from "./molecule.js";
+import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRenderer, PartialCharge } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
 
 import { Translations } from "./translations.js";
@@ -206,14 +206,16 @@ export class InspectorBond {
         } else {
             this.html.toElemBtn.innerHTML = to.nameAsHTML;
             this.html.toElemBtn.onclick = () => inspectElemFn(this.toElem);
+            this.html.toElemBtn.onpointerenter = () => hightlightedElems.add(this.toElem);
+            this.html.toElemBtn.onpointerleave = () => hightlightedElems.delete(this.toElem);
             mainMoleculeRenderer.render(currentMolecule);
             mainMoleculeRenderer.updateMoleculeSize();
         }
 
         this.html.bondAngleInput.value = ((bond.angle + (isParent ? 180 : 0)) % 360).toString();
         this.html.bondAngleInput.onchange = () => {
-            let num = Number.parseFloat(this.html.bondAngleInput.value);
-            num = (num - (isParent ? 180 : 0) + 3600) % 360;
+            let num = isNaN(this.html.bondAngleInput.value) ? 0 : Number.parseFloat(this.html.bondAngleInput.value);
+            num = ((Number.isNaN(num) ? 0 : num) - (isParent ? 180 : 0) + 3600) % 360;
             this.html.bondAngleInput.value = ((num + (isParent ? 180 : 0)) % 360).toString();
             this.bond.angle = num;
             mainMoleculeRenderer.render(currentMolecule);
@@ -223,8 +225,8 @@ export class InspectorBond {
         this.html.bondDropdownBtn.childNodes[0].textContent = bond.length.toString();
         this.html.bondLengthInput.value = bond.length.toString();
         this.html.bondLengthInput.onchange = () => {
-            let num = Number.parseFloat(this.html.bondLengthInput.value);
-            num = Math.min(Math.max(num, 0.25), 4);
+            let num = isNaN(this.html.bondLengthInput.value) ? 0 : Number.parseFloat(this.html.bondLengthInput.value);
+            num = Math.min(Math.max((Number.isNaN(num) ? 0 : num), 0.25), 4);
             this.html.bondLengthInput.value = num.toString();
             this.bond.length = num;
             this.html.bondDropdownBtn.childNodes[0].textContent = num.toString();
@@ -246,22 +248,31 @@ export class InspectorBond {
             };
         });
 
-        this.html.bondDeleteButton.onclick = () => {
-            if (this.toElem !== null) {
-                this.toElem.unattachSelf();
-                inspectElemFn(this.fromElem);
-            } else {
-                inspectElemFn(this.fromElem);
-                let i = 0;
-                for (let bond of this.fromElem.attachedBonds) {
-                    if (bond === this.bond) {
-                        this.fromElem.attachedBonds.splice(i, 1);
-                        break;
+        if (isParent) {
+            this.html.bondDeleteButton.classList.add("disabled");
+            this.html.bondDeleteButton.title = Translations.TEXTS.INSPECTOR_BOND_CANNOT_REMOVE;
+        } else {
+            this.html.bondDeleteButton.onclick = () => {
+                if (this.toElem !== null) {
+                    this.toElem.unattachSelf();
+                    mainMoleculeRenderer.render(currentMolecule);
+                    mainMoleculeRenderer.updateMoleculeSize();
+                    inspectElemFn(this.fromElem);
+                } else {
+                    let i = 0;
+                    for (let bond of this.fromElem.attachedBonds) {
+                        if (bond === this.bond) {
+                            this.fromElem.attachedBonds.splice(i, 1);
+                            break;
+                        }
+                        i++;
                     }
-                    i++;
+                    mainMoleculeRenderer.render(currentMolecule);
+                    mainMoleculeRenderer.updateMoleculeSize();
+                    inspectElemFn(this.fromElem);
                 }
-            }
-        };
+            };
+        }
     }
 
     /**
@@ -284,7 +295,7 @@ class AddBondElementTab {
      */
     constructor(baseHtml) {
         this.baseHtml = baseHtml;
-        this.elemNameInput = baseHtml.querySelector("#inspector-add-bond-elem-name");
+        this.elemNameInput = baseHtml.querySelector(".inspector-add-bond-elem-name");
     }
 }
 
@@ -308,7 +319,7 @@ class AddBondGroupTab {
                 selector.open(mol => {
                     this.selectedBondGroup = mol;
                     this.elemGroupSelectBtn.querySelector(".btn-contents").replaceChildren();
-                    let molRenderer = new MoleculeRenderer(this.elemGroupSelectBtn.querySelector(".btn-contents"), false, "center_horiz_root");
+                    let molRenderer = new MoleculeRenderer(this.elemGroupSelectBtn.querySelector(".btn-contents"), false, MoleculePositioning.CENTER_HORIZ_ROOT);
                     opts.moleculeRenderModifier.pre(mol);
                     molRenderer.render(mol);
                     opts.moleculeRenderModifier.post(mol);
@@ -323,9 +334,53 @@ class AddBondRingTab {
     /** @type {HTMLElement} */
     baseHtml;
 
+    /** @type {HTMLInputElement} */
+    elemNameInput;
+
+    /** @type {HTMLInputElement} */
+    ringSizeInput;
+
+    /** @type {number} */
+    lastRingSize;
+
+    /** @type {HTMLInputElement} */
+    ringBondCountInput;
+
+    /** @type {number} */
+    get ringSize() {
+        return Number.parseInt(this.ringSizeInput.value);
+    }
+
+    /** @type {number} */
+    get ringBondCount() {
+        return Number.parseInt(this.ringBondCountInput.value);
+    }
+
+    /** @param {number} num  */
+    set ringSize(num) {
+        this.ringSizeInput.value = Math.floor(Math.min(Math.max(num, 3), 18)).toString();
+    }
+
+    /** @param {number} num  */
+    set ringBondCount(num) {
+        this.ringBondCountInput.value = Math.floor(Math.min(Math.max(num, 3), 18)).toString();
+    }
+
     constructor(baseHtml) {
         this.baseHtml = baseHtml;
-        // TODO
+        this.elemNameInput = baseHtml.querySelector(".inspector-add-bond-elem-name");
+        this.ringSizeInput = baseHtml.querySelector("#inspector-add-bond-ring-size");
+        this.ringBondCountInput = baseHtml.querySelector("#inspector-add-bond-ring-bond-count");
+        
+        this.ringSize = 3;
+        this.lastRingSize = this.ringSize;
+        this.ringBondCount = 3;
+
+        this.ringSizeInput.onchange = () => {
+            this.ringSize = this.ringSize; // Automatically clamps to [3;18]
+            this.ringBondCount += this.ringSize - this.lastRingSize; // Automatically clamps to [3;18]
+            this.lastRingSize = this.ringSize;
+        };
     }
 }
 
@@ -390,9 +445,10 @@ export class InspectorAddBondDropdown {
 
     #addBond() {
         let canInspect = true;
+        let elemName;
         switch (this.selectedElemType) {
             case "element":
-                let elemName = this.bondElemTypeTabs.element.elemNameInput.value;
+                elemName = this.bondElemTypeTabs.element.elemNameInput.value;
                 canInspect &= elemName.length > 0;
                 this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elemName.length > 0 ? elemName : undefined);
                 mainMoleculeRenderer.render(currentMolecule);
@@ -408,7 +464,17 @@ export class InspectorAddBondDropdown {
                 mainMoleculeRenderer.updateMoleculeSize();
                 break;
             case "ring":
-                // TODO
+                elemName = this.bondElemTypeTabs.ring.elemNameInput.value;
+                let ringSize = this.bondElemTypeTabs.ring.ringSize;
+                let ringBondCount = this.bondElemTypeTabs.ring.ringBondCount;
+                if (elemName.length === 0) { return; }
+                let currElem = this.currentElem;
+                let angleDelta = 360 - (360 / ringSize);
+                for (let i=0; i < ringBondCount; i++) {
+                    let newElem = i == ringBondCount - 1 ? undefined : new ChemElem(elemName);
+                    currElem.attachElement(this.selectedBondType, this.bondAngle + i*angleDelta, this.bondLength, newElem);
+                    currElem = newElem;
+                }
                 break;
         }
         if (this.bondChangeAngleCheck.checked) {
@@ -466,8 +532,8 @@ export class InspectorAddBondDropdown {
             });
             this.bondAngleInput.value = "0";
             this.bondAngleInput.onchange = () => {
-                let num = Number.parseFloat(this.bondAngleInput.value);
-                num = (num + 3600) % 360;
+                let num = isNaN(this.bondAngleInput.value) ? 0 : Number.parseFloat(this.bondAngleInput.value);
+                num = ((Number.isNaN(num) ? 0 : num) + 3600) % 360;
                 this.bondAngleInput.value = num.toString();
             };
             this.bondTypeSelection.opts.forEach(opt => {
@@ -479,8 +545,8 @@ export class InspectorAddBondDropdown {
             })
             this.bondLengthInput.value = "1";
             this.bondLengthInput.onchange = () => {
-                let num = Number.parseFloat(this.bondLengthInput.value);
-                num = Math.min(Math.max(num, 0.25), 4);
+                let num = isNaN(this.bondLengthInput.value) ? 0 : Number.parseFloat(this.bondLengthInput.value);
+                num = Math.min(Math.max((Number.isNaN(num) ? 0 : num), 0.25), 4);
                 this.bondLengthInput.value = num.toString();
             };
             this.addBondBtn.onclick = () => this.#addBond();
