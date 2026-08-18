@@ -1,0 +1,5 @@
+{
+    "name": "Ethanol",
+    "category": "alcohols",
+    "root":{"name":"C","partialCharge":null,"charge":0,"attachedBonds":[{"bondType":"single","bondAngle":0,"bondLength":1,"attachedElement":{"name":"C","partialCharge":null,"charge":0,"attachedBonds":[{"bondType":"single","bondAngle":90,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":270,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":0,"bondLength":1,"attachedElement":{"name":"OH","partialCharge":null,"charge":0,"attachedBonds":[]}}]}},{"bondType":"single","bondAngle":90,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":180,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}},{"bondType":"single","bondAngle":270,"bondLength":1,"attachedElement":{"name":"H","partialCharge":null,"charge":0,"attachedBonds":[]}}]}
+}

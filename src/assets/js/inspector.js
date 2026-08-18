@@ -249,8 +249,18 @@ export class InspectorBond {
         });
 
         if (isParent) {
-            this.html.bondDeleteButton.classList.add("disabled");
-            this.html.bondDeleteButton.title = Translations.TEXTS.INSPECTOR_BOND_CANNOT_REMOVE;
+            // this.html.bondDeleteButton.classList.add("disabled");
+            // this.html.bondDeleteButton.title = Translations.TEXTS.INSPECTOR_BOND_CANNOT_REMOVE;
+
+            // When trying to delete the elements's parent, reparent to the current element
+            this.html.bondDeleteButton.onclick = () => {
+                this.fromElem.unattachSelf();
+
+                currentMolecule.root = this.fromElem;
+                mainMoleculeRenderer.render(currentMolecule);
+                mainMoleculeRenderer.updateMoleculeSize();
+                inspectElemFn(this.fromElem);
+            };
         } else {
             this.html.bondDeleteButton.onclick = () => {
                 if (this.toElem !== null) {

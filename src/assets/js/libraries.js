@@ -136,14 +136,16 @@ export class MoleculeLibrarySelector {
     #getLibraryEntries(search, sort) {
         /** @type {[string, string, string?, string?]} */
         let [_1, nameSearch, _2, categorySearch] = search.match(/([^#]*)(#([^#]+)*)?/);
+        nameSearch = nameSearch.trim();
+        categorySearch = categorySearch?.trim() ?? undefined;
         let searched = this.library.molecules;
         if (nameSearch.length > 0) {
-            searched = searched.filter(val => val.name.includes(nameSearch));
+            searched = searched.filter(val => val.name.toLocaleLowerCase().includes(nameSearch.toLocaleLowerCase()));
         }
         if (categorySearch && categorySearch.length > 0) {
             searched = searched.filter(val => {
-                let categoryString = (val.category ? Translations.BOND_PRESET_CATEGORIES[val.category] : undefined) ?? Translations.BOND_PRESET_CATEGORIES.CATEGORY_MISSING;
-                return categoryString.includes(categorySearch);
+                let categoryString = (val.category ? Translations.LIBRARY_CATEGORIES[val.category] : undefined) ?? Translations.LIBRARY_CATEGORIES.CATEGORY_MISSING;
+                return categoryString.toLocaleLowerCase().includes(categorySearch.toLocaleLowerCase());
             });
         }
         switch (sort) {
@@ -171,9 +173,9 @@ export class MoleculeLibrarySelector {
     #redoLibraryEntries(html, modal, onMoleculeSelected) {
         html.libraryContents.replaceChildren();
 
-        let lastCategory = Translations.BOND_PRESET_CATEGORIES.CATEGORY_MISSING
+        let lastCategory = Translations.LIBRARY_CATEGORIES.CATEGORY_MISSING
         for (let {name, category, auto_select, molecule} of this.#getLibraryEntries(html.searchInput.value, html.sortSelect.value)) {
-            let categoryString = (category ? Translations.BOND_PRESET_CATEGORIES[category] : undefined) ?? Translations.BOND_PRESET_CATEGORIES.CATEGORY_MISSING;
+            let categoryString = (category ? Translations.LIBRARY_CATEGORIES[category] : undefined) ?? Translations.LIBRARY_CATEGORIES.CATEGORY_MISSING;
             if (lastCategory !== category && html.sortSelect.value.startsWith("category_")) {
                 html.libraryContents.appendChild(createSimpleElement("h3", categoryString, { classes: ["category-title"] }))
             }
@@ -185,17 +187,26 @@ export class MoleculeLibrarySelector {
             selectable.category.innerText = categoryString;
 
             let moleculeRenderer = new MoleculeRenderer(selectable.renderArea, false, this.options?.moleculePositioningValue ?? "center_horiz_root");
+
+            /** @type {Promise<import("./molecule.js").MoleculeMetrics?>} */
+            let metricsPromise;
             if (this.options?.moleculeRenderModifier) {
                 this.options.moleculeRenderModifier.pre(molecule);
-                moleculeRenderer.render(molecule);
+                metricsPromise = moleculeRenderer.render(molecule);
                 this.options.moleculeRenderModifier.post(molecule);
             } else {
-                moleculeRenderer.render(molecule);
+                metricsPromise = moleculeRenderer.render(molecule);
             }
-            let metrics = moleculeRenderer.updateMoleculeSize();
-            let scaleFacX = selectable.renderArea.getBoundingClientRect().width / metrics.width;
-            let scaleFacY = selectable.renderArea.getBoundingClientRect().height / metrics.height;
-            selectable.renderArea.style.scale = Math.min(scaleFacX, scaleFacY, 1.0).toString();
+            moleculeRenderer.updateMoleculeSize();
+            metricsPromise.then(metrics => {
+                let renderAreaRect = selectable.renderArea.getBoundingClientRect();
+                if (metrics === null) { return; }
+                console.log(metrics, renderAreaRect);
+                let scaleFacX = renderAreaRect.width / metrics.width * 0.9;
+                let scaleFacY = renderAreaRect.height / metrics.height * 0.9;
+                selectable.renderArea.style.scale = Math.min(scaleFacX, scaleFacY, 1.0).toString();
+            });
+            
             selectable.baseHtml.onclick = () => {
                 onMoleculeSelected(molecule);
                 modal.hide();
@@ -216,9 +227,9 @@ export class MoleculeLibrarySelector {
 
         html.libraryContents.replaceChildren();
 
-        let last_category = Translations.BOND_PRESET_CATEGORIES.CATEGORY_MISSING
+        let last_category = Translations.LIBRARY_CATEGORIES.CATEGORY_MISSING
         for (let {name, category, auto_select, molecule} of this.#getLibraryEntries(html.searchInput.value, html.sortSelect.value)) {
-            let category_string = (category ? Translations.BOND_PRESET_CATEGORIES[category] : undefined) ?? Translations.BOND_PRESET_CATEGORIES.CATEGORY_MISSING;
+            let category_string = (category ? Translations.LIBRARY_CATEGORIES[category] : undefined) ?? Translations.LIBRARY_CATEGORIES.CATEGORY_MISSING;
             if (last_category !== category && html.sortSelect.value.startsWith("category_")) {
                 html.libraryContents.appendChild(createSimpleElement("h3", category_string, { classes: ["category-title"] }))
             }
@@ -240,9 +251,9 @@ export class MoleculeLibrarySelector {
                 } else {
                     metricsPromise = moleculeRenderer.render(molecule);
                 }
-                let renderAreaRect = selectable.renderArea.getBoundingClientRect();
                 moleculeRenderer.updateMoleculeSize();
                 metricsPromise.then(metrics => {
+                    let renderAreaRect = selectable.renderArea.getBoundingClientRect();
                     if (metrics === null) { return; }
                     let scaleFacX = renderAreaRect.width / metrics.width * 0.9;
                     let scaleFacY = renderAreaRect.height / metrics.height * 0.9;

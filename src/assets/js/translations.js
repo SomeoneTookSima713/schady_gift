@@ -21,9 +21,11 @@ export const Translations = Object.freeze({
         INSPECTOR_BOND_LENGTH: "Bindungslänge:",
         INSPECTOR_BOND_ATTACHED_ELEM: "Element:",
     },
-    BOND_PRESET_CATEGORIES: {
+    LIBRARY_CATEGORIES: {
         "functional_groups": "Funktionelle Gruppe",
         "carbon_chain": "Kohlenstoffkette",
+        "amino_acids": "Aminosäure",
+        "alcohols": "Alkohol",
         CATEGORY_MISSING: "Keine Kategorie"
     },
     NOTIFICATIONS: {

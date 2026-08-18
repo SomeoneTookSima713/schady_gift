@@ -1,6 +1,6 @@
 [package]
 name = "schadychemicals"
-version = "0.1.0"
+version = "0.2.0"
 description = "Der Chemiebaukasten für Herr Schädlich"
 authors = ["Simon Schneider <simon4808@outlook.de>"]
 edition = "2024"
