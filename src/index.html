@@ -43,6 +43,18 @@
                 Element
             </h3>
             <input autocomplete="off" type="text" id="inspector-name" class="form-control text-center" aria-describedby="inspectorElemName">
+            <div class="row mt-2">
+                <label for="inspector-elem-align" class="col-5 align-content-center">Ausrichtung:</label>
+                <div class="col-7">
+                    <select autocomplete="off" id="inspector-elem-align" class="form-select">
+                        <option value="left" selected>Links</option>
+                        <option value="right">Rechts</option>
+                        <option value="up">Hoch</option>
+                        <option value="down">Runter</option>
+                        <option value="center">Mittig</option>
+                    </select>
+                </div>
+            </div>
             <div id="inspector-remove-btns" class="btn-group pt-2 pb-4" role="group" aria-label="Delete Buttons">
                 <div class="btn btn-outline-danger btn-like" tabindex="-1"><i class="fa-regular fa-trash-can"></i></div>
                 <button id="inspector-remove-elem" class="btn btn-danger" style="width: stretch;"><img src="/assets/png/delete_elem.png"></button>

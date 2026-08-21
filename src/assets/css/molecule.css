@@ -10,6 +10,7 @@
     --molecule-offset-x: 0;
     --molecule-offset-y: 0;
     margin: 0;
+    will-change: --molecule-offset-x, --molecule-offset-y;
     /* display: flex;
     flex-direction: column;
     justify-content: center;
@@ -22,7 +23,7 @@ main.mol-container {
 
 .molecule {
     --stuff-size: 14pt;
-    --bond-width-initial: 6;
+    --bond-width-initial: 10;
     --bond-width-mult: 1;
     --bond-rot: 0deg;
     --total-bond-rot: 0deg;
@@ -39,6 +40,7 @@ main.mol-container {
     position: absolute;
     --parent-total-bond-rot: var(--total-bond-rot);
     --bond-aro-add: 0pt;
+    --content-background: var(--workspace-background);
     /* transform-origin: var(--elem-transform-x) 48%; */
     /* transform-origin:
         calc((0.4 * cos(var(--bond-rot)) + 0.5 * sin(var(--bond-rot))) * var(--stuff-size))
@@ -62,24 +64,158 @@ main.mol-container {
 }
 
 .element.highlighted {
-    background: #a1c9fd;
+    --content-background: #a1c9fd;
 }
 
 .element.selected {
-    background: #25f19c;
+    --content-background: #25f19c;
 }
 
+/* .element.highlighted::before {
+    display: block;
+    content: '';
+    width: calc(var(--bond-attached-elem-width) + 0.12 * var(--stuff-size));
+    height: calc(var(--bond-attached-elem-height) + 0.02 * var(--stuff-size));
+    position: absolute;
+    left: calc(-0.06 * var(--stuff-size));
+    top: calc(-0.01 * var(--stuff-size));
+    background: #a1c9fd;
+    opacity: 0.7;
+    z-index: 9;
+    border-radius: calc(0.33 * var(--stuff-size));
+}
+
+.element.selected::before {
+    display: block;
+    content: '';
+    width: calc(var(--bond-attached-elem-width) + 0.12 * var(--stuff-size));
+    height: calc(var(--bond-attached-elem-height) + 0.02 * var(--stuff-size));
+    position: absolute;
+    left: calc(-0.06 * var(--stuff-size));
+    top: calc(-0.01 * var(--stuff-size));
+    background: #25f19c;
+    opacity: 0.7;
+    z-index: 9;
+    border-radius: calc(0.33 * var(--stuff-size));
+} */
+
 .elem-content {
+    position: absolute;
     display: inline-block;
     margin-right: 0.5pt;
     width: max-content;
+
+    --height-sub-top: 6px;
+    --height-sub-bottom: 5px;
+    --bg-offset-x: 0px;
+    --bg-offset-y: 0px;
+
+    > * {
+        position: relative;
+        z-index: 10;
+        > span {
+            position: relative;
+            z-index: 10;
+        }
+    }
+
+    &:has(> button sub) {
+        --height-sub-bottom: 0px;
+    }
+
+    &:has(> button sup) {
+        --height-sub-top: 0px;
+    }
+
+    &.elem-empty button {
+        width: 12.5px;
+        height: 24px;
+    }
+    
+    &[data-elem-align="up"] {
+        --bg-offset-y: calc(20px - var(--bond-attached-elem-height));
+        --height-sub-bottom: 0px;
+
+        > button {
+            display: inline-flex;
+            flex-direction: column-reverse;
+            align-items: flex-start;
+    
+            top: var(--bg-offset-y);
+    
+            > * {
+                margin-bottom: -7px;
+            }
+        }
+    }
+
+    &[data-elem-align="down"] {
+        --height-sub-bottom: 0px;
+        
+        > button {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+    
+            > * {
+                margin-bottom: -7px;
+            }
+        }
+    }
+
+    &[data-elem-align="right"] {
+        --bg-offset-x: calc(12.5px - var(--bond-attached-elem-width));
+
+        > button {
+            left: var(--bg-offset-x);
+        }
+    }
+
+    &[data-elem-align="center"] {
+        --bg-offset-x: calc(0.5 * (12.5px - var(--bond-attached-elem-width)));
+
+        > button {
+            left: var(--bg-offset-x);
+        }
+    }
+}
+
+.element > .elem-content[data-elem-align="center"]:not(.elem-empty) > *::after, 
+.element > .elem-content[data-elem-align="left"]:not(.elem-empty) > *::after {
+    content: attr(data-content-html);
+    position: absolute;
+    left: 0;
+    -webkit-text-stroke: 7px var(--content-background);
+    z-index: 8;
+}
+
+.element > .elem-content:not([data-elem-align="left"]):not([data-elem-align="center"]):not(.elem-empty) > * {
+    text-shadow:
+         0px  0px 4px var(--content-background),
+        -3px -3px 1px var(--content-background),
+        -3px -2px 1px var(--content-background),
+        -3px  0px 1px var(--content-background),
+        -3px  2px 1px var(--content-background),
+        -3px  3px 1px var(--content-background),
+        -2px -3px 1px var(--content-background),
+        -2px  3px 1px var(--content-background),
+         0px -3px 1px var(--content-background),
+         0px  3px 1px var(--content-background),
+         2px -3px 1px var(--content-background),
+         2px  3px 1px var(--content-background),
+         3px -3px 1px var(--content-background),
+         3px -2px 1px var(--content-background),
+         3px  0px 1px var(--content-background),
+         3px  2px 1px var(--content-background),
+         3px  3px 1px var(--content-background)
+    ;
 }
 
 .elem-content sub {
     display: inline-block;
     vertical-align: inherit;
     font-size: calc(var(--stuff-size) * 0.66);
-    transform: translateY(calc(var(--stuff-size) * 0.16));
+    transform: translateY(calc(var(--stuff-size) * 0.083));
 }
 
 .elem-content sup {
@@ -97,6 +233,33 @@ main.mol-container {
     font: inherit;
     cursor: pointer;
     outline: inherit;
+}
+
+.elem-content:not(.elem-empty)::before {
+    display: block;
+    content: '';
+    width: calc(var(--bond-attached-elem-width) + 0.02 * var(--stuff-size));
+    height: calc(var(--bond-attached-elem-height) - var(--height-sub-top) - var(--height-sub-bottom) + 0.02 * var(--stuff-size));
+    position: absolute;
+    left: calc(-0.01 * var(--stuff-size) + var(--bg-offset-x));
+    top: calc(var(--height-sub-top) - 0.01 * var(--stuff-size) + var(--bg-offset-y));
+    background: var(--content-background);
+    z-index: 8;
+    border-radius: calc(0.33 * var(--stuff-size));
+}
+
+.element.selected > .elem-content.elem-empty::before,
+.element.highlighted > .elem-content.elem-empty::before {
+    display: block;
+    content: '';
+    width: calc(12.5px + 0.02 * var(--stuff-size));
+    height: calc(24px + 0.02 * var(--stuff-size));
+    position: absolute;
+    left: calc(-0.01 * var(--stuff-size) + var(--bg-offset-x));
+    top: calc(-0.01 * var(--stuff-size) + var(--bg-offset-y));
+    background: var(--content-background);
+    z-index: 8;
+    border-radius: calc(0.33 * var(--stuff-size));
 }
 
 .elem-charge {
@@ -131,12 +294,17 @@ main.mol-container {
 
 .bond {
     --bond-width: calc(var(--bond-width-initial) * var(--bond-width-mult));
-    --molecule-elem-dist: calc(1mm * var(--bond-width) + var(--stuff-size));
+    /* --molecule-elem-dist: calc(1mm * var(--bond-width) + var(--stuff-size)); */
+    --molecule-elem-dist: calc(1mm * var(--bond-width));
     --bond-attached-elem-width: 0; /* Gets set through JS */
     --bond-attached-elem-height: 0; /* Gets set through JS */
-    --bond-elem-offset-x-mult: calc(sign(mod(var(--bond-rot) + 89deg, 359deg) - 180deg) * 0.5 + 0.5);
+    --bond-parent-elem-width: 0; /* Gets set through JS */
+    --bond-parent-elem-height: 0; /* Gets set through JS */
+    --bond-elem-offset-x-mult: calc(sign(mod(var(--bond-rot) + 90.5deg, 360deg) - 180deg) * 0.5 + 0.5);
     --bond-elem-offset-x: calc(var(--bond-attached-elem-width) * var(--bond-elem-offset-x-mult));
-    --bond-elem-pos-x: calc(var(--molecule-elem-dist) * cos(var(--bond-rot)) + (12.2px - var(--bond-attached-elem-width)) * var(--bond-elem-offset-x-mult));
+    --bond-elem-pos-x: calc(var(--molecule-elem-dist) * cos(var(--bond-rot)));
+    /* --bond-elem-pos-x: calc(var(--molecule-elem-dist) * cos(var(--bond-rot)) + (12.2px - var(--bond-attached-elem-width)) * var(--bond-elem-offset-x-mult)); */
+    /* --bond-elem-pos-x: calc(var(--molecule-elem-dist) * cos(var(--bond-rot)) + (12.2px - var(--bond-attached-elem-width)) * var(--bond-elem-offset-x-mult) + (var(--bond-parent-elem-width) - 12.2px * 0.5) * var(--bond-elem-offset-x-mult)); */
     --bond-elem-pos-y: calc(var(--molecule-elem-dist) * sin(var(--bond-rot)));
     display: inline-block;
     position: absolute;
@@ -148,16 +316,17 @@ main.mol-container {
 .bond::before {
     content: '';
     position: absolute;
-    left: calc(12.2px * (0.5 - var(--bond-elem-offset-x-mult)) + var(--bond-attached-elem-width) * var(--bond-elem-offset-x-mult));
+    left: calc(12.2px * 0.5);
+    /* left: calc(12.2px * (0.5 - var(--bond-elem-offset-x-mult)) + var(--bond-attached-elem-width) * var(--bond-elem-offset-x-mult)); */
     top: 0;
     display: block;
     width: calc(1mm * var(--bond-width));
-    height: var(--bond-attached-elem-height);
+    height: 28px;
 
-    transform-origin: 0% 50%;
+    transform-origin: 0% 48%;
     transform:
         rotate(calc(180deg + var(--bond-rot)))
-        translateX(calc(0.5 * var(--stuff-size)))
+        /* translateX(calc(0.5 * var(--stuff-size))) */
         ;
 }
 

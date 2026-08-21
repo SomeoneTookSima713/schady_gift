@@ -1,3 +1,5 @@
+import { createSimpleElement } from "./html_helper.js";
+
 /**
  * @readonly
  * @enum {string}
@@ -7,6 +9,18 @@ export const BondType = Object.freeze({
     DOUBLE: "double",
     TRIPLE: "triple",
     DOTTED: "dotted"
+});
+
+/**
+ * @readonly
+ * @enum {string}
+ */
+export const ElemAlign = Object.freeze({
+    UP: "up",
+    DOWN: "down",
+    LEFT: "left",
+    RIGHT: "right",
+    CENTER: "center"
 });
 
 // /**
@@ -80,7 +94,13 @@ export class Molecule {
     render(renderer) {
         let molecule = document.createElement("div");
         molecule.classList.add("molecule");
-        molecule.appendChild(this.root.render(renderer));
+        let rootElem = this.root.render(renderer);
+        molecule.appendChild(rootElem);
+        renderer.waiting_on_promises.push(waitForElm(`#${rootElem.id}`).then(() => {
+            molecule.style.setProperty("--bond-attached-elem-width", `${rootElem.getElementsByClassName("elem-content")[0].getBoundingClientRect().width}px`);
+            molecule.style.setProperty("--bond-attached-elem-height", `${rootElem.getElementsByClassName("elem-content")[0].getBoundingClientRect().height}px`);
+            return renderer.updateMoleculeSize();
+        }));
         return molecule;
     }
 
@@ -186,16 +206,70 @@ export class Bond {
     }
 }
 
+const CHAR_TO_SUBSCRIPT = Object.freeze({
+    "0": "₀",
+    "1": "₁",
+    "2": "₂",
+    "3": "₃",
+    "4": "₄",
+    "5": "₅",
+    "6": "₆",
+    "7": "₇",
+    "8": "₈",
+    "9": "₉",
+    "+": "₊",
+    "-": "₋",
+    "=": "₌",
+    "(": "₍",
+    ")": "₎",
+    "a": "ₐ",
+    "e": "ₑ",
+    "h": "ₕ",
+    "i": "ᵢ",
+    "j": "ⱼ",
+    "k": "ₖ",
+    "l": "ₗ",
+    "m": "ₘ",
+    "n": "ₙ",
+    "o": "ₒ",
+    "p": "ₚ",
+    "r": "ᵣ",
+    "s": "ₛ",
+    "t": "ₜ",
+    "u": "ᵤ",
+    "v": "ᵥ",
+    "x": "ₓ"
+});
+
+const CHAR_TO_SUPERSCRIPT = Object.freeze({
+    "0": "⁰",
+    "1": "¹",
+    "2": "²",
+    "3": "³",
+    "4": "⁴",
+    "5": "⁵",
+    "6": "⁶",
+    "7": "⁷",
+    "8": "⁸",
+    "9": "⁹",
+    "+": "⁺",
+    "-": "⁻",
+    "(": "⁽",
+    ")": "⁾"
+});
+
 export class ChemElem {
     static PAT_SUBSCRIPT = /_(\d+|\{[^}]+\})/;
     static PAT_SUPERSCRIPT = /\^(\d?(\+|\-)|\{[^}]+\})/;
+    static PAT_REGULAR_TEXT_1 = /([^<>\/]*)(<sub>[^<]*<\/sub>|<sup>[^<]<\/sup>)/g;
+    static PAT_REGULAR_TEXT_2 = /([^<>\/]*)$/;
 
     /** @type {string} */
     name;
+    /** @type {ElemAlign} */
+    elemAlign = ElemAlign.LEFT;
     /** @type {?PartialCharge} */
     partialCharge = null;
-    /** @type {number} */
-    charge = 0;
     /** @type {Bond[]} */
     attachedBonds = [];
     /** @type {?ChemElem} */
@@ -203,7 +277,7 @@ export class ChemElem {
 
     /**
      * @param {string} name
-     * @param {{partialCharge?: PartialCharge, charge?: number, attachedBonds?: Bond[], parentElem?: ChemElem}} [options]
+     * @param {{partialCharge?: PartialCharge, attachedBonds?: Bond[], parentElem?: ChemElem, elemAlign?: ElemAlign}} [options]
      */
     constructor(name, options) {
         this.id = Math.floor(Math.random() * 999999);
@@ -213,14 +287,14 @@ export class ChemElem {
             if (options.partialCharge) {
                 this.partialCharge = options.partialCharge;
             }
-            if (options.charge) {
-                this.charge = options.charge;
-            }
             if (options.parentElem) {
                 this.parentElem = options.parentElem;
             }
             if (options.attachedBonds) {
                 this.attachedBonds = options.attachedBonds;
+            }
+            if (options.elemAlign) {
+                this.elemAlign = options.elemAlign;
             }
         }
     }
@@ -292,6 +366,38 @@ export class ChemElem {
             converted_name = converted_name.replace(match[0], `<sup>${match[1].replaceAll(/[{}]/g, "")}</sup>`);
             match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
         }
+        for (let match of converted_name.matchAll(ChemElem.PAT_REGULAR_TEXT_1)) {
+            let spanned = "";
+            for (let i=0; i<match[1].length - 1; i++) {
+                spanned += `<span>${match[1].charAt(i)}</span>`;
+            }
+            spanned += `<span>${match[1].charAt(match[1].length - 1)}${match[2]}</span>`;
+            converted_name = converted_name.replace(match[0], spanned);
+        }
+        match = converted_name.match(ChemElem.PAT_REGULAR_TEXT_2);
+        if (match) {
+            let spanned = "";
+            for (let i=0; i<match[1].length; i++) {
+                spanned += `<span>${match[1].charAt(i)}</span>`;
+            }
+            converted_name = converted_name.replace(match[1], spanned);
+        }
+        return converted_name;
+    }
+
+    /** @type {string} */
+    get nameAsAttr() {
+        let converted_name = new String(this.name);
+        let match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
+        while (match) {
+            converted_name = converted_name.replace(match[0], match[1].replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUBSCRIPT[v] ?? "_"));
+            match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
+        }
+        match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
+        while (match) {
+            converted_name = converted_name.replace(match[0], match[1].replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUPERSCRIPT[v] ?? "_"));
+            match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
+        }
         return converted_name;
     }
 
@@ -300,32 +406,38 @@ export class ChemElem {
      * @returns {HTMLElement} Rendered HTML
      */
     render(renderer) {
-        let elem = document.createElement("div");
-        elem.classList.add("element");
-        elem.id = `elem-${this.id}`;
-        let bond_content = document.createElement("span");
-        bond_content.classList.add("elem-content");
+        let elem = createSimpleElement("div", [], {
+            id: `elem-${this.id}`,
+            classes: ["element"]
+        });
+        let bond_content = createSimpleElement("span", [], {
+            classes: ["elem-content"],
+            attrs: { "data-elem-align": this.elemAlign }
+        });
+        if (this.name === "_") { bond_content.classList.add("elem-empty"); }
         let bond_content_anchor = document.createElement("button");
         bond_content_anchor.innerHTML = this.name === "_" ? "" : this.nameAsHTML;
+        bond_content_anchor.setAttribute("data-content-html", this.nameAsAttr);
         if (renderer.isMainRenderer) {
             bond_content_anchor.onclick = globalThis.inspectChemElem.bind(undefined, this);
         }
         bond_content.appendChild(bond_content_anchor);
         elem.appendChild(bond_content);
-        if (this.charge != 0) {
-            let bond_charge = document.createElement("span");
-            bond_charge.classList.add("elem-charge");
-            bond_charge.innerText = `${Math.abs(this.charge)}${Math.sign(this.charge) > 0 ? '+' : '-'}`;
-            elem.appendChild(bond_charge);
-        }
         if (this.partialCharge) {
             let bond_charge = document.createElement("span");
             let position = "pos_top"; // TODO
             bond_charge.classList.add("partial-charge", position, this.partialCharge);
             elem.appendChild(bond_charge);
         }
+        
         for (let bond of this.attachedBonds) {
-            elem.appendChild(bond.render(renderer));
+            let bondHtml = bond.render(renderer);
+            waitForElm(`#${elem.id}`).then(elem => {
+                let rect = elem.getBoundingClientRect();
+                bondHtml.style.setProperty("--bond-parent-elem-width", `${rect.width}px`);
+                bondHtml.style.setProperty("--bond-parent-elem-height", `${rect.height}px`);
+            });
+            elem.appendChild(bondHtml);
         }
 
         return elem;
@@ -337,6 +449,7 @@ export class ChemElem {
     serialize() {
         return {
             name: this.name,
+            align: this.elemAlign,
             partialCharge: this.partialCharge,
             charge: this.charge,
             attachedBonds: this.attachedBonds.map(b => b.serialize())
@@ -352,7 +465,8 @@ export class ChemElem {
         let elem = new ChemElem(json["name"], {
             partialCharge: json["partialCharge"],
             charge: json["charge"],
-            attachedBonds: bonds
+            attachedBonds: bonds,
+            elemAlign: json["align"]
         });
         for (let bond of bonds) {
             if (bond.attachedElem) {
@@ -526,7 +640,7 @@ export class MoleculeRenderer {
         if (molecule !== undefined) {
             this.html_element.appendChild(molecule.render(this));
             return Promise.all(this.waiting_on_promises).then(_ => {
-                return this.updateMoleculeSize();
+                return this.html_element.children.length > 0 ? getMoleculeSize(this.html_element.children[0]) : {width: 0, height: 0};
             });
         }
         return null;
@@ -613,11 +727,14 @@ export function getMoleculeSize(mol_html) {
         min_y = Math.min(min_y, rect.top, rect.bottom);
         max_y = Math.max(max_y, rect.top, rect.bottom);
 
-        for (let i = 0; i < curr_node.children.length; i++) {
-            let child = curr_node.children[i];
-            if (child.classList.contains("bond")) {
-                minmax(child.children[0]);
-            }
+        // for (let i = 0; i < curr_node.children.length; i++) {
+        //     let child = curr_node.children[i];
+        //     if (child.classList.contains("bond")) {
+        //         minmax(child.children[0]);
+        //     }
+        // }
+        for (let child of curr_node.children) {
+            minmax(child);
         }
     }
 

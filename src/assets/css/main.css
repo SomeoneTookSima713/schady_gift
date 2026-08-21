@@ -3,14 +3,21 @@
     src: url("/assets/font/Roboto-VariableFont_wdth,wght.ttf");
 }
 
+@font-face {
+    font-family: 'Open Sans';
+    src: url("/assets/font/OpenSans-VariableFont_wdth,wght.ttf");
+}
+
 :root {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
 
+  --workspace-background: #fff;
+
   color: #0f0f0f;
-  background-color: #f6f6f6;
+  background-color: var(--workspace-background);
 
   font-synthesis: none;
   text-rendering: geometricPrecision;
@@ -25,6 +32,10 @@ body {
 
 #main_container {
     overflow: hidden;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
 }
 
 .btn-like {
@@ -58,6 +69,10 @@ body {
 
     .selectable {
         transition: filter 0.15s ease-in-out;
+
+        .card-img-top {
+            overflow: hidden;
+        }
     }
 
     .selectable:hover {

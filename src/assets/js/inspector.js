@@ -66,15 +66,15 @@ function unhighlightMolecule(currElem) {
     }
 }
 
-setInterval(() => {
-    unhighlightMolecule();
-    for (let elem of hightlightedElems.values()) {
-        document.getElementById(`elem-${elem.id}`).classList.add("highlighted");
-    }
-    if (selectedElem) {
-        document.getElementById(`elem-${selectedElem.id}`).classList.add("selected");
-    }
-}, 50);
+// setInterval(() => {
+//     unhighlightMolecule();
+//     for (let elem of hightlightedElems.values()) {
+//         document.getElementById(`elem-${elem.id}`).classList.add("highlighted");
+//     }
+//     if (selectedElem) {
+//         document.getElementById(`elem-${selectedElem.id}`).classList.add("selected");
+//     }
+// }, 50);
 
 /**
  * @typedef {Object} InspectorWindowGeneralStuff
@@ -206,8 +206,10 @@ export class InspectorBond {
         } else {
             this.html.toElemBtn.innerHTML = to.nameAsHTML;
             this.html.toElemBtn.onclick = () => inspectElemFn(this.toElem);
-            this.html.toElemBtn.onpointerenter = () => hightlightedElems.add(this.toElem);
-            this.html.toElemBtn.onpointerleave = () => hightlightedElems.delete(this.toElem);
+            // this.html.toElemBtn.onpointerenter = () => hightlightedElems.add(this.toElem);
+            // this.html.toElemBtn.onpointerleave = () => hightlightedElems.delete(this.toElem);
+            this.html.toElemBtn.onpointerenter = () => document.getElementById(`elem-${this.toElem.id}`).classList.add("highlighted");
+            this.html.toElemBtn.onpointerleave = () => document.getElementById(`elem-${this.toElem.id}`).classList.remove("highlighted");
             mainMoleculeRenderer.render(currentMolecule);
             mainMoleculeRenderer.updateMoleculeSize();
         }
@@ -577,6 +579,9 @@ export class InspectorHTML {
     
     /** @type {HTMLInputElement} */
     elemName;
+
+    /** @type {HTMLSelectElement} */
+    elemAlignSelect;
     
     /** @type {{partial: HTMLButtonElement, full: HTMLButtonElement}} */
     deleteBtns;
@@ -597,6 +602,7 @@ export class InspectorHTML {
         this.baseHtml = baseHtml;
         this.closeBtn = this.baseHtml.querySelector("#inspector-close");
         this.elemName = this.baseHtml.querySelector("#inspector-name");
+        this.elemAlignSelect = this.baseHtml.querySelector("#inspector-elem-align");
         this.deleteBtns = {
             partial: this.baseHtml.querySelector("#inspector-remove-elem"),
             full: this.baseHtml.querySelector("#inspector-remove-elem-full")
@@ -656,19 +662,28 @@ export class InspectorWindow {
      * @param {HTMLElement} container 
      */
     openAndRender(container) {
-        selectedElem = this.element;
-        hightlightedElems.clear();
+        // selectedElem = this.element;
+        // hightlightedElems.clear();
         /** @type {HTMLElement} */
         let child;
         while (child = container.firstElementChild) {
             child.remove();
         }
 
-        this.html.closeBtn.onclick = closeInspector;
+        this.html.closeBtn.onclick = () => {
+            document.getElementById(`elem-${this.element.id}`).classList.remove("selected");
+            closeInspector();
+        };
 
         this.html.elemName.value = this.element.name;
         this.html.elemName.oninput = () => {
             this.element.name = this.html.elemName.value;
+            mainMoleculeRenderer.render(currentMolecule);
+            mainMoleculeRenderer.updateMoleculeSize();
+        };
+        this.html.elemAlignSelect.value = this.element.elemAlign;
+        this.html.elemAlignSelect.onchange = () => {
+            this.element.elemAlign = this.html.elemAlignSelect.value;
             mainMoleculeRenderer.render(currentMolecule);
             mainMoleculeRenderer.updateMoleculeSize();
         };
@@ -709,6 +724,7 @@ export class InspectorWindow {
 
         this.html.insertInto(container, this.inspectElemFn);
         container.classList.add("active");
+        document.getElementById(`elem-${this.element.id}`).classList.add("selected");
     }
 }
 

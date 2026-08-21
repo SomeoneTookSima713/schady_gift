@@ -201,10 +201,11 @@ export class MoleculeLibrarySelector {
             metricsPromise.then(metrics => {
                 let renderAreaRect = selectable.renderArea.getBoundingClientRect();
                 if (metrics === null) { return; }
-                console.log(metrics, renderAreaRect);
-                let scaleFacX = renderAreaRect.width / metrics.width * 0.9;
-                let scaleFacY = renderAreaRect.height / metrics.height * 0.9;
-                selectable.renderArea.style.scale = Math.min(scaleFacX, scaleFacY, 1.0).toString();
+                let scaleFacX = renderAreaRect.width / metrics.width * 0.95;
+                let scaleFacY = renderAreaRect.height / metrics.height * 0.95;
+                let scale = Math.min(scaleFacX, scaleFacY, 1.0);
+                selectable.renderArea.children[0].style.scale = scale.toString();
+                selectable.renderArea.children[0].style.height = `${metrics.height * scale}px`;
             });
             
             selectable.baseHtml.onclick = () => {
@@ -255,9 +256,11 @@ export class MoleculeLibrarySelector {
                 metricsPromise.then(metrics => {
                     let renderAreaRect = selectable.renderArea.getBoundingClientRect();
                     if (metrics === null) { return; }
-                    let scaleFacX = renderAreaRect.width / metrics.width * 0.9;
-                    let scaleFacY = renderAreaRect.height / metrics.height * 0.9;
-                    selectable.renderArea.style.scale = Math.min(scaleFacX, scaleFacY, 1.0).toString();
+                    let scaleFacX = renderAreaRect.width / metrics.width * 0.95;
+                    let scaleFacY = renderAreaRect.height / metrics.height * 0.95;
+                    let scale = Math.min(scaleFacX, scaleFacY, 1.0);
+                    selectable.renderArea.children[0].style.scale = scale.toString();
+                    selectable.renderArea.children[0].style.height = `${metrics.height * scale}px`;
                 });
             });
             selectable.baseHtml.onclick = () => {
