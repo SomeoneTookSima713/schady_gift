@@ -2,7 +2,7 @@ import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRender
 /** @import {BondAngle} from "./molecule.js" */
 
 import { Translations } from "./translations.js";
-import { createButton, createNumberInput, createSelect, createSimpleElement, createTextInput, createCheckboxInput, makeNumInputScrollable, makeNumInputIndirectlyScrollable } from "./html_helper.js";
+import { createButton, createNumberInput, createSelect, createSimpleElement, createTextInput, createCheckboxInput, INPUT_SCROLL_DELTA, makeNumInputScrollable, makeNumInputIndirectlyScrollable } from "./html_helper.js";
 import { NEW_BOND_PRESETS } from "./bond_presets.js";
 import { LIBRARY_SELECTOR_HTML, LIBRARY_SELECTOR_OPTIONS_PRESETS, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
 
@@ -219,7 +219,10 @@ export class InspectorBond {
             let num = isNaN(this.html.bondAngleInput.value) ? 0 : Number.parseFloat(this.html.bondAngleInput.value);
             num = ((Number.isNaN(num) ? 0 : num) - (isParent ? 180 : 0) + 3600) % 360;
             this.html.bondAngleInput.value = ((num + (isParent ? 180 : 0)) % 360).toString();
-            this.bond.angle = num;
+            // addToMainMoleculeHistory();
+            // this.bond.angle = num;
+            let oldAngle = this.bond.angle;
+            modifyMainMoleculeBond(this.bond, b => b.angle = num, b => b.angle = oldAngle);
             rerenderMainMolecule();
         };
         makeNumInputScrollable(this.html.bondAngleInput, 15, 45, 5);
@@ -230,7 +233,10 @@ export class InspectorBond {
             let num = isNaN(this.html.bondLengthInput.value) ? 0 : Number.parseFloat(this.html.bondLengthInput.value);
             num = Math.min(Math.max((Number.isNaN(num) ? 0 : num), 0.25), 4);
             this.html.bondLengthInput.value = num.toString();
-            this.bond.length = num;
+            // addToMainMoleculeHistory();
+            // this.bond.length = num;
+            let oldLength = this.bond.length;
+            modifyMainMoleculeBond(this.bond, b => b.length = num, b => b.length = oldLength);
             this.html.bondDropdownBtn.childNodes[0].textContent = num.toString();
             rerenderMainMolecule();
         };
@@ -245,7 +251,10 @@ export class InspectorBond {
             opt.onclick = () => {
                 this.html.bondTypeDropdown.btn.querySelector("img").src = `/assets/png/${bond}_bond.png`;
                 this.html.bondDropdownBtn.childNodes[1].src = `/assets/png/${bond}_bond.png`;
-                this.bond.bondType = bond;
+                // addToMainMoleculeHistory();
+                // this.bond.bondType = bond;
+                let oldBondType = this.bond.bondType;
+                modifyMainMoleculeBond(this.bond, b => b.bondType = bond, b => b.bondType = oldBondType);
                 rerenderMainMolecule();
             };
         });
@@ -255,8 +264,8 @@ export class InspectorBond {
             let t = this;
             /** @type {(event: WheelEvent) => any} */
             let scrollHandler = function(event) {
-                scrollDelta += event.deltaY / 100;
-                if (Math.abs(scrollDelta) >= 1) {
+                scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
+                if (Math.abs(scrollDelta) >= 1 && event.ctrlKey) {
                     let sign = Math.sign(scrollDelta);
                     scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
 
@@ -269,7 +278,10 @@ export class InspectorBond {
 
                             t.html.bondTypeDropdown.btn.querySelector("img").src = `/assets/png/${bond}_bond.png`;
                             t.html.bondDropdownBtn.childNodes[1].src = `/assets/png/${bond}_bond.png`;
-                            t.bond.bondType = bond;
+                            // addToMainMoleculeHistory();
+                            // t.bond.bondType = bond;
+                            let oldBondType = t.bond.bondType;
+                            modifyMainMoleculeBond(t.bond, b => b.bondType = bond, b => b.bondType = oldBondType);
                             rerenderMainMolecule();
                             break;
                         }
@@ -302,21 +314,33 @@ export class InspectorBond {
             this.html.bondDeleteButton.onclick = () => {
                 this.fromElem.unattachSelf();
 
-                currentMolecule.root = this.fromElem;
+                // addToMainMoleculeHistory();
+                // currentMolecule.root = this.fromElem;
+                let oldRoot = currentMolecule.root;
+                modifyMainMolecule(m => m.root = this.fromElem, m => m.root = oldRoot);
                 rerenderMainMolecule();
                 inspectElemFn(this.fromElem);
             };
         } else {
             this.html.bondDeleteButton.onclick = () => {
                 if (this.toElem !== null) {
-                    this.toElem.unattachSelf();
+                    // addToMainMoleculeHistory();
+                    // this.toElem.unattachSelf();
+                    let oldParent = this.fromElem;
+                    let oldElem = this.toElem;
+                    let oldBondType = this.bond.bondType;
+                    let oldBondAngle = this.bond.angle;
+                    let oldBondLength = this.bond.length;
+                    modifyMainMoleculeElem(oldParent, e => oldElem.unattachSelf(), e => e.attachElement(oldBondType, oldBondAngle, oldBondLength, oldElem));
                     rerenderMainMolecule();
                     inspectElemFn(this.fromElem);
                 } else {
                     let i = 0;
                     for (let bond of this.fromElem.attachedBonds) {
                         if (bond === this.bond) {
-                            this.fromElem.attachedBonds.splice(i, 1);
+                            // addToMainMoleculeHistory();
+                            // this.fromElem.attachedBonds.splice(i, 1);
+                            modifyMainMoleculeElem(this.fromElem, e => e.attachedBonds.splice(i, 1), e => e.attachedBonds.splice(i, 0, bond));
                             break;
                         }
                         i++;
@@ -501,11 +525,27 @@ export class InspectorAddBondDropdown {
     #addBond() {
         let canInspect = true;
         let elemName;
+        let [bty, ba, bl] = [this.selectedBondType, this.bondAngle, this.bondLength];
         switch (this.selectedElemType) {
             case "element":
                 elemName = this.bondElemTypeTabs.element.elemNameInput.value;
                 canInspect &= elemName.length > 0;
-                this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elemName.length > 0 ? elemName : undefined);
+                // addToMainMoleculeHistory();
+                // this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elemName.length > 0 ? elemName : undefined);
+                if (elemName.length > 0) {
+                    let newSingularElem = new ChemElem(elemName);
+                    modifyMainMoleculeElem(this.currentElem, e => e.attachElement(bty, ba, bl, newSingularElem), e => newSingularElem.unattachSelf());
+                } else {
+                    let tmpElem = new ChemElem("");
+                    let index;
+                    let bondIndex;
+                    modifyMainMolecule(m => {
+                        let b = m.index(this.currentElem.moleculeIndex).attachElement(bty, ba, bl, tmpElem);
+                        index = tmpElem.moleculeIndex;
+                        bondIndex = index.pop();
+                        b.attachedElem = undefined;
+                    }, m => m.index(index).attachedBonds.splice(bondIndex, 1));
+                }
                 rerenderMainMolecule();
                 break;
             case "group":
@@ -513,7 +553,9 @@ export class InspectorAddBondDropdown {
                 if (elem === null) { return; }
                 elem = elem.clone();
                 elem.rotate(this.bondAngle);
-                this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elem.root);
+                // addToMainMoleculeHistory();
+                // this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elem.root);
+                modifyMainMoleculeElem(this.currentElem, e => e.attachElement(bty, ba, bl, elem.root), e => elem.root.unattachSelf());
                 rerenderMainMolecule();
                 break;
             case "ring":
@@ -521,13 +563,18 @@ export class InspectorAddBondDropdown {
                 let ringSize = this.bondElemTypeTabs.ring.ringSize;
                 let ringBondCount = this.bondElemTypeTabs.ring.ringBondCount;
                 if (elemName.length === 0) { return; }
-                let currElem = this.currentElem;
+                let currElem;
+                /** @type {ChemElem?} */
+                let firstRingElem;
                 let angleDelta = 360 - (360 / ringSize);
                 for (let i=0; i < ringBondCount; i++) {
                     let newElem = i == ringBondCount - 1 ? undefined : new ChemElem(elemName);
-                    currElem.attachElement(this.selectedBondType, this.bondAngle + i*angleDelta, this.bondLength, newElem);
+                    if (currElem) currElem.attachElement(bty, ba + i*angleDelta, bl, newElem);
                     currElem = newElem;
+                    if (i == 0) { firstRingElem = newElem; }
                 }
+                modifyMainMoleculeElem(this.currentElem, e => e.attachElement(bty, ba, bl, firstRingElem), e => firstRingElem.unattachSelf() );
+                rerenderMainMolecule();
                 break;
         }
         if (this.bondChangeAngleCheck.checked) {
@@ -603,8 +650,8 @@ export class InspectorAddBondDropdown {
                 let t = this;
                 /** @type {(event: WheelEvent) => any} */
                 let scrollHandler = function(event) {
-                    scrollDelta += event.deltaY / 100;
-                    if (Math.abs(scrollDelta) >= 1) {
+                    scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
+                    if (Math.abs(scrollDelta) >= 1 && event.ctrlKey) {
                         let sign = Math.sign(scrollDelta);
                         scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
 
@@ -754,22 +801,38 @@ export class InspectorWindow {
 
         this.html.elemName.value = this.element.name;
         this.html.elemName.oninput = () => {
-            this.element.name = this.html.elemName.value;
+            // addToMainMoleculeHistory();
+            // this.element.name = this.html.elemName.value;
+            let oldName = this.element.name;
+            let newName = this.html.elemName.value;
+            modifyMainMoleculeElem(this.element, e => e.name = newName, e => e.name = oldName);
             rerenderMainMolecule();
         };
         this.html.elemAlignSelect.value = this.element.elemAlign;
         this.html.elemAlignSelect.onchange = () => {
-            this.element.elemAlign = this.html.elemAlignSelect.value;
+            // addToMainMoleculeHistory();
+            // this.element.elemAlign = this.html.elemAlignSelect.value;
+            let oldAlign = this.element.elemAlign;
+            let newAlign = this.html.elemAlignSelect.value;
+            modifyMainMoleculeElem(this.element, e => e.elemAlign = newAlign, e => e.elemAlign = oldAlign);
             rerenderMainMolecule();
         };
         if (this.element.parentElem !== null) {
             this.html.deleteBtns.partial.onclick = () => {
-                this.element.parentBond.attachedElem = undefined;
+                // addToMainMoleculeHistory();
+                // this.element.parentBond.attachedElem = undefined;
+                let el = this.element;
+                modifyMainMoleculeBond(this.element.parentBond, b => b.attachedElem = undefined, b => b.attachedElem = el);
                 rerenderMainMolecule();
                 closeInspector();
             };
             this.html.deleteBtns.full.onclick = () => {
-                this.element.unattachSelf();
+                // addToMainMoleculeHistory();
+                // this.element.unattachSelf();
+                let el = this.element;
+                let b = this.element.parentBond;
+                let [bty, ba, bl] = [b.bondType, b.angle, b.length];
+                modifyMainMoleculeElem(this.element.parentElem, e => el.unattachSelf(), e => e.attachElement(bty, ba, bl, el));
                 rerenderMainMolecule();
                 closeInspector();
             };
@@ -805,6 +868,14 @@ window.addEventListener("load", () => {
     mainMoleculeRenderer.render(currentMolecule);
 });
 
+/** @typedef {[(m: Molecule) => undefined, (m: Molecule) => undefined]} MoleculeModification A modification and it's inverse */
+
+/** @type {MoleculeModification[]} */
+var currentMoleculeHistory = [];
+
+/** @type {MoleculeModification[]} */
+var currentMoleculeRedoStack = [];
+
 /** @type {Molecule} */
 var currentMolecule;
 /** @type {ChemElem?} */
@@ -814,7 +885,77 @@ var hightlightedElems = new Set();
 /** @type {MoleculeRenderer} */
 export var mainMoleculeRenderer = new MoleculeRenderer(document.getElementById("main_container"), true);
 
-function rerenderMainMolecule() {
+export function addToMainMoleculeHistory() {
+    throw new Error("Doesn't work like this no more!");
+    // currentMoleculeHistory.push(currentMolecule.clone());
+    // currentMoleculeRedoStack = [];
+}
+
+/**
+ * Should be used to modify the main molecule, such that an undo/redo history
+ * can be kept.
+ * @param {(m: Molecule) => undefined} modification 
+ * @param {(m: Molecule) => undefined} inverse 
+ */
+export function modifyMainMolecule(modification, inverse) {
+    modification(currentMolecule);
+    currentMoleculeHistory.push([modification, inverse]);
+    currentMoleculeRedoStack = []
+}
+
+/**
+ * Helper function to more easily modify elements that are part of the main
+ * molecule.
+ * @param {ChemElem} elem Should be somewhere in the main molecule's element tree
+ * @param {(e: ChemElem) => undefined} modification 
+ * @param {(e: ChemElem) => undefined} inverse 
+ */
+export function modifyMainMoleculeElem(elem, modification, inverse) {
+    let index = elem.moleculeIndex;
+    modifyMainMolecule(m => modification(m.index(index)), m => inverse(m.index(index)));
+}
+
+/**
+ * Helper function to more easily modify bonds that are part of the main
+ * molecule.
+ * @param {Bond} bond Should be somewhere in the main molecule's element tree
+ * @param {(e: Bond) => undefined} modification 
+ * @param {(e: Bond) => undefined} inverse 
+ */
+export function modifyMainMoleculeBond(bond, modification, inverse) {
+    let index = bond.attachedElem.moleculeIndex;
+    let bondIndex = index.pop();
+    modifyMainMolecule(m => modification(m.index(index).attachedBonds[bondIndex]), m => inverse(m.index(index).attachedBonds[bondIndex]));
+}
+
+export function resetMainMoleculeHistory() {
+    currentMoleculeHistory = [];
+    currentMoleculeRedoStack = [];
+}
+
+export function undoMainMolecule() {
+    console.log("undo", currentMoleculeHistory, currentMoleculeRedoStack);
+    if (currentMoleculeHistory.length > 0) {
+        let mod = currentMoleculeHistory.pop();
+        currentMoleculeRedoStack.push(mod);
+        console.log("undo2", currentMoleculeHistory, currentMoleculeRedoStack);
+        mod[1](currentMolecule);
+        rerenderMainMolecule();
+    }
+}
+
+export function redoMainMolecule() {
+    console.log("redo", currentMoleculeHistory, currentMoleculeRedoStack);
+    if (currentMoleculeRedoStack.length > 0) {
+        let mod = currentMoleculeRedoStack.pop();
+        currentMoleculeHistory.push(mod);
+        console.log("redo2", currentMoleculeHistory, currentMoleculeRedoStack);
+        mod[0](currentMolecule);
+        rerenderMainMolecule();
+    }
+}
+
+export function rerenderMainMolecule() {
     mainMoleculeRenderer.render(currentMolecule);
     mainMoleculeRenderer.updateMoleculeSize();
     if (selectedElem) {

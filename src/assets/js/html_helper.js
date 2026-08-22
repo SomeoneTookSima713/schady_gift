@@ -187,6 +187,8 @@ export function createCheckboxInput(initialValue, options) {
     return elem;
 }
 
+export const INPUT_SCROLL_DELTA = -100;
+
 /**
  * Makes the given number input element change it's value when scrolling while hovering over it
  * @param {HTMLInputElement} inputElem 
@@ -209,7 +211,7 @@ export function makeNumInputScrollable(inputElem, normalIncrement, shiftIncremen
             inc = shiftIncrement;
         }
 
-        scrollDelta += event.deltaY / 100;
+        scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
         if (Math.abs(scrollDelta) >= 1) {
             // inputElem.value = (Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc).toString();
             let num = Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc;
@@ -258,7 +260,7 @@ export function makeNumInputIndirectlyScrollable(scrollElem, inputElem, normalIn
             inc = shiftIncrement;
         }
 
-        scrollDelta += event.deltaY / 100;
+        scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
         if (Math.abs(scrollDelta) >= 1) {
             let num = Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc;
             let min = Number.parseFloat(inputElem.min);
@@ -293,7 +295,7 @@ export function makeSelectScrollable(selectElem) {
 
     /** @type {(event: WheelEvent) => any} */
     let scrollHandler = function(event) {
-        scrollDelta += event.deltaY / 100;
+        scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
         if (Math.abs(scrollDelta) >= 1) {
             selectElem.value = selectElem.options[Math.min(Math.max(selectElem.selectedIndex + Math.sign(scrollDelta), 0), selectElem.options.length)];
             scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
@@ -318,7 +320,7 @@ export function makeSelectIndirectlyScrollable(scrollElem, selectElem) {
 
     /** @type {(event: WheelEvent) => any} */
     let scrollHandler = function(event) {
-        scrollDelta += event.deltaY / 100;
+        scrollDelta += event.deltaY / INPUT_SCROLL_DELTA;
         if (Math.abs(scrollDelta) >= 1) {
             selectElem.value = selectElem.options[Math.min(Math.max(selectElem.selectedIndex + Math.sign(scrollDelta), 0), selectElem.options.length)];
             scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));

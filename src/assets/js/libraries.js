@@ -107,12 +107,23 @@ export class MoleculeLibrarySelectorHTML {
  * @property {"default"|"center_horiz_root"} [moleculePositioningValue] Default is `"center_horiz_root"`
  */
 
+/** @type {MoleculeLibrarySelector?} */
+let currentlyOpenedLibrarySelector = null;
+
+/** @returns {boolean} */
+export function isLibrarySelectorOpen() {
+    return currentlyOpenedLibrarySelector !== null;
+}
+
 export class MoleculeLibrarySelector {
     /** @type {MoleculeLibrary} */
     library;
 
     /** @type {MoleculeLibrarySelectorHTML} */
     htmlBase;
+
+    /** @type {HTMLElement?} */
+    currentHtmlElement = null;
 
     /** @type {LibrarySelectorOptions?} */
     options = null;
@@ -217,9 +228,14 @@ export class MoleculeLibrarySelector {
     }
 
     /**
-     * @param {(molecule: Molecule) => any} onMoleculeSelected 
+     * Closes any already opened libraries and opens this one.
+     * @param {(molecule: Molecule) => any} onMoleculeSelected Gets called once a molecule gets selected
      */
-    open(onMoleculeSelected) {
+    async open(onMoleculeSelected) {
+        if (currentlyOpenedLibrarySelector !== null) {
+            bootstrap.Modal.getOrCreateInstance(currentlyOpenedLibrarySelector.currentHtmlElement).hide();
+            await (new Promise(resolve => addEventListener("hidden.bs.modal", () => resolve())));
+        }
         let html = this.htmlBase.clone();
         let modal;
 
@@ -271,10 +287,18 @@ export class MoleculeLibrarySelector {
         }
         
         document.body.appendChild(html.baseHtml);
+        this.currentHtmlElement = html.baseHtml;
         html.baseHtml.id = `library-selector-${Math.random().toString(36).slice(2, 7)}`;
-        html.baseHtml.addEventListener("hidden.bs.modal", () => { document.body.removeChild(html.baseHtml); });
+        let t = this;
+        html.baseHtml.addEventListener("hidden.bs.modal", () => {
+            document.body.removeChild(html.baseHtml);
+            if (currentlyOpenedLibrarySelector === t) {
+                currentlyOpenedLibrarySelector = null;
+            }
+        });
         modal = bootstrap.Modal.getOrCreateInstance(`#${html.baseHtml.id}`);
         modal.show();
+        currentlyOpenedLibrarySelector = this;
     }
 }
 

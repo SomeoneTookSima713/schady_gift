@@ -35,6 +35,7 @@ export const ElemAlign = Object.freeze({
 // ].map((val) => [`${val}DEG`, val])));
 /**
  * @typedef {number} BondAngle
+ * @typedef {number[]} MoleculeIndex
 */
 
 /**
@@ -85,6 +86,22 @@ export class Molecule {
 
             currVal = stack.splice(0, 1)[0];
         }
+    }
+
+    /**
+     * Indexes this molecule to return a specific element in it's tree
+     * @param {MoleculeIndex} index 
+     * @returns {ChemElem?}
+     */
+    index(index) {
+        let current = this.root;
+        for (let idx of index) {
+            current = current.attachedBonds[idx]?.attachedElem;
+            if (!current) {
+                return null;
+            }
+        }
+        return current;
     }
 
     /**
@@ -321,20 +338,42 @@ export class ChemElem {
         }
         return null;
     }
+    
+    /**
+     * The index of this element in it's molecule, if it is in one
+     * @type {MoleculeIndex?}
+     */
+    get moleculeIndex() {
+        let index = [];
+        let current = this;
+        while (current.parentElem) {
+            for (let [i, bond] of current.parentElem.attachedBonds.entries()) {
+                if (bond.attachedElem === current) {
+                    index.push(i);
+                    break;
+                }
+            }
+            current = current.parentElem;
+        }
+        return index.reverse();
+    }
 
     /**
-     * Attaches a new element to this one
+     * Attaches a new element to this one, returning the produced bond object
      * @param {BondType} bondType 
      * @param {BondAngle} bondAngle 
      * @param {number} bondLength
      * @param {ChemElem | string} [element] 
+     * @returns {Bond}
      */
     attachElement(bondType, bondAngle, bondLength, element) {
         let elem = element ? ChemElem.normalize(element) : undefined;
         if (elem) {
             elem.parentElem = this;
         }
-        this.attachedBonds.push(new Bond(bondType, bondAngle, bondLength, elem));
+        let b = new Bond(bondType, bondAngle, bondLength, elem);
+        this.attachedBonds.push(b);
+        return b;
     }
 
     /**

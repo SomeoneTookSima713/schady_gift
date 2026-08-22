@@ -1,9 +1,9 @@
 import { Translations } from "./translations.js";
 import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRenderer, PartialCharge, getMoleculeSize } from "./molecule.js";
 /** @import {BondAngle} from "./molecule.js" */
-import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML } from "./inspector.js";
+import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML, undoMainMolecule, redoMainMolecule, addToMainMoleculeHistory, resetMainMoleculeHistory } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
-import { LIBRARY_SELECTOR_HTML, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
+import { isLibrarySelectorOpen, LIBRARY_SELECTOR_HTML, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
 
 const invoke = window.__TAURI__.core.invoke;
 const listen = window.__TAURI__.event.listen;
@@ -117,6 +117,7 @@ function loadMoleculeFromLibrary() {
                 Translations.NOTIFICATIONS.MSG_LOAD_COMPLETED,
                 false, true
             );
+            resetMainMoleculeHistory();
             setCurrentMolecule(mol);
         });
     });
@@ -219,3 +220,12 @@ document.onmouseup = event => {
 };
 
 window.oncontextmenu = () => false;
+
+document.addEventListener("keydown", event => {
+    if (isLibrarySelectorOpen()) { return; }
+    if (event.key.toLocaleLowerCase() === "z" && event.ctrlKey) {
+        undoMainMolecule();
+    } else if (event.key.toLocaleLowerCase() === "y" && event.ctrlKey) {
+        redoMainMolecule();
+    }
+});
