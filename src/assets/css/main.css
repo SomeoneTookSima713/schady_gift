@@ -42,6 +42,14 @@ body {
     pointer-events: none !important;
 }
 
+.btn-outline-dark > img {
+    transition: filter 0.15s ease-in-out;
+}
+
+.btn-outline-dark:hover > img, .btn-outline-dark.show > img {
+    filter: invert(1);
+}
+
 .molecule-library .modal-dialog {
     width: 80vw;
     max-width: 80vw;

@@ -186,3 +186,150 @@ export function createCheckboxInput(initialValue, options) {
     elem.checked = initialValue;
     return elem;
 }
+
+/**
+ * Makes the given number input element change it's value when scrolling while hovering over it
+ * @param {HTMLInputElement} inputElem 
+ * @param {number} normalIncrement 
+ * @param {number?} [shiftIncrement] Defaults to the normal increment
+ * @param {number?} [ctrlIncrement] Defaults to the normal increment
+ * @throws {TypeError} When the given input element isn't of type `number`
+ */
+export function makeNumInputScrollable(inputElem, normalIncrement, shiftIncrement, ctrlIncrement) {
+    if (inputElem.type !== "number") { throw new TypeError("input element's type isn't 'number'"); }
+
+    let scrollDelta = 0;
+
+    /** @type {(event: WheelEvent) => any} */
+    let scrollHandler = function(event) {
+        let inc = normalIncrement;
+        if (event.ctrlKey) {
+            inc = ctrlIncrement;
+        } else if (event.shiftKey) {
+            inc = shiftIncrement;
+        }
+
+        scrollDelta += event.deltaY / 100;
+        if (Math.abs(scrollDelta) >= 1) {
+            // inputElem.value = (Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc).toString();
+            let num = Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc;
+            let min = Number.parseFloat(inputElem.min);
+            let max = Number.parseFloat(inputElem.max);
+            if (!Number.isNaN(min)) {
+                num = Math.max(num, min);
+            }
+            if (!Number.isNaN(max)) {
+                num = Math.min(num, max);
+            }
+            inputElem.value = num.toString();
+
+            scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
+            inputElem.dispatchEvent(new Event("change"));
+        }
+    };
+
+    inputElem.onpointerenter = () => {
+        document.addEventListener("wheel", scrollHandler);
+    };
+    inputElem.onpointerleave = () => {
+        document.removeEventListener("wheel", scrollHandler);
+    };
+}
+
+/**
+ * @param {HTMLElement} scrollElem What to scroll over
+ * @param {HTMLInputElement} inputElem What to change when scrolling
+ * @param {number} normalIncrement 
+ * @param {number?} [shiftIncrement] Defaults to the normal increment
+ * @param {number?} [ctrlIncrement] Defaults to the normal increment
+ * @throws {TypeError} When the given input element isn't of type `number`
+ */
+export function makeNumInputIndirectlyScrollable(scrollElem, inputElem, normalIncrement, shiftIncrement, ctrlIncrement) {
+    if (inputElem.type !== "number") { throw new TypeError("input element's type isn't 'number'"); }
+
+    let scrollDelta = 0;
+
+    /** @type {(event: WheelEvent) => any} */
+    let scrollHandler = function(event) {
+        let inc = normalIncrement;
+        if (event.ctrlKey) {
+            inc = ctrlIncrement;
+        } else if (event.shiftKey) {
+            inc = shiftIncrement;
+        }
+
+        scrollDelta += event.deltaY / 100;
+        if (Math.abs(scrollDelta) >= 1) {
+            let num = Number.parseFloat(inputElem.value) + Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta)) * inc;
+            let min = Number.parseFloat(inputElem.min);
+            let max = Number.parseFloat(inputElem.max);
+            if (!Number.isNaN(min)) {
+                num = Math.max(num, min);
+            }
+            if (!Number.isNaN(max)) {
+                num = Math.min(num, max);
+            }
+            inputElem.value = num.toString();
+
+            scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
+            inputElem.dispatchEvent(new Event("change"));
+        }
+    };
+
+    scrollElem.addEventListener("pointerenter", () => {
+        document.addEventListener("wheel", scrollHandler);
+    });
+    scrollElem.addEventListener("pointerleave", () => {
+        document.removeEventListener("wheel", scrollHandler);
+    });
+}
+
+/**
+ * Makes the given select element change it's value when scrolling while hovering over it
+ * @param {HTMLSelectElement} selectElem 
+ */
+export function makeSelectScrollable(selectElem) {
+    let scrollDelta = 0;
+
+    /** @type {(event: WheelEvent) => any} */
+    let scrollHandler = function(event) {
+        scrollDelta += event.deltaY / 100;
+        if (Math.abs(scrollDelta) >= 1) {
+            selectElem.value = selectElem.options[Math.min(Math.max(selectElem.selectedIndex + Math.sign(scrollDelta), 0), selectElem.options.length)];
+            scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
+            selectElem.dispatchEvent(new Event("change"));
+        }
+    };
+
+    selectElem.onpointerenter = () => {
+        document.addEventListener("wheel", scrollHandler);
+    };
+    selectElem.onpointerleave = () => {
+        document.removeEventListener("wheel", scrollHandler);
+    };
+}
+
+/**
+ * @param {HTMLElement} scrollElem What to scroll over
+ * @param {HTMLSelectElement} selectElem What to change when scrolling
+ */
+export function makeSelectIndirectlyScrollable(scrollElem, selectElem) {
+    let scrollDelta = 0;
+
+    /** @type {(event: WheelEvent) => any} */
+    let scrollHandler = function(event) {
+        scrollDelta += event.deltaY / 100;
+        if (Math.abs(scrollDelta) >= 1) {
+            selectElem.value = selectElem.options[Math.min(Math.max(selectElem.selectedIndex + Math.sign(scrollDelta), 0), selectElem.options.length)];
+            scrollDelta -= Math.sign(scrollDelta) * Math.floor(Math.abs(scrollDelta));
+            selectElem.dispatchEvent(new Event("change"));
+        }
+    };
+
+    scrollElem.onpointerenter = () => {
+        document.addEventListener("wheel", scrollHandler);
+    };
+    scrollElem.onpointerleave = () => {
+        document.removeEventListener("wheel", scrollHandler);
+    };
+}
