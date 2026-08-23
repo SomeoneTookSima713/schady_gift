@@ -181,6 +181,8 @@ function renderMolecule() {
                     height: 100%;
                     transform-origin: 50% 0%;
                     scale: ${scale};
+                    --molecule-offset-x: 0px !important;
+                    --molecule-offset-y: 0px !important;
                 }
                 ]]>
             </style>
@@ -281,34 +283,6 @@ async function exportMoleculeToClipboard() {
         .finally(() => {
             button.disabled = false;
         });
-
-    // canvas.toBlob(async blob => {
-    //     let buf = await blob.bytes();
-    //     console.log(buf.length);
-    //     invoke("export_molecule", buf, { headers: { width: canvas.width.toString(), height: canvas.height.toString() } })
-    //         .then((/** @type {string} */ result) => {
-    //             pushNotification(
-    //                 Translations.NOTIFICATIONS.TITLE_EXPORT,
-    //                 Translations.NOTIFICATIONS.MSG_EXPORT_COMPLETED,
-    //                 false, true
-    //             );
-    //             console.log(result);
-    //         })
-    //         .catch((/** @type {string} */ error) => {
-    //             if (error === "err_export_aborted") {
-    //                 console.log("Load was aborted");
-    //             } else {
-    //                 pushNotification(
-    //                     Translations.NOTIFICATIONS.TITLE_EXPORT,
-    //                     Translations.NOTIFICATIONS.MSG_EXPORT_ERRORED.replace("$1", error),
-    //                     true, false
-    //                 );
-    //             }
-    //         })
-    //         .finally(() => {
-    //             button.disabled = false;
-    //         })
-    // });
 }
 
 window.onload = () => {
