@@ -11,10 +11,6 @@
     --molecule-offset-y: 0;
     margin: 0;
     will-change: --molecule-offset-x, --molecule-offset-y;
-    /* display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center; */
 }
 
 main.mol-container {
@@ -30,7 +26,6 @@ main.mol-container {
     --elem-transform-x: 0;
     font-size: var(--stuff-size);
     margin: auto;
-    /* border-left: 2pt solid red; */
     width: var(--molecule-width);
     height: var(--molecule-height);
 }
@@ -41,12 +36,6 @@ main.mol-container {
     --parent-total-bond-rot: var(--total-bond-rot);
     --bond-aro-add: 0pt;
     --content-background: var(--workspace-background);
-    /* transform-origin: var(--elem-transform-x) 48%; */
-    /* transform-origin:
-        calc((0.4 * cos(var(--bond-rot)) + 0.5 * sin(var(--bond-rot))) * var(--stuff-size))
-        calc((0.4 * sin(var(--bond-rot)) + 0.5 * cos(var(--bond-rot))) * var(--stuff-size)); */
-    
-    /* transform: rotate(calc(-1 * var(--bond-rot))); */
 }
 
 .molecule > .element {
@@ -70,34 +59,6 @@ main.mol-container {
 .element.selected {
     --content-background: #25f19c;
 }
-
-/* .element.highlighted::before {
-    display: block;
-    content: '';
-    width: calc(var(--bond-attached-elem-width) + 0.12 * var(--stuff-size));
-    height: calc(var(--bond-attached-elem-height) + 0.02 * var(--stuff-size));
-    position: absolute;
-    left: calc(-0.06 * var(--stuff-size));
-    top: calc(-0.01 * var(--stuff-size));
-    background: #a1c9fd;
-    opacity: 0.7;
-    z-index: 9;
-    border-radius: calc(0.33 * var(--stuff-size));
-}
-
-.element.selected::before {
-    display: block;
-    content: '';
-    width: calc(var(--bond-attached-elem-width) + 0.12 * var(--stuff-size));
-    height: calc(var(--bond-attached-elem-height) + 0.02 * var(--stuff-size));
-    position: absolute;
-    left: calc(-0.06 * var(--stuff-size));
-    top: calc(-0.01 * var(--stuff-size));
-    background: #25f19c;
-    opacity: 0.7;
-    z-index: 9;
-    border-radius: calc(0.33 * var(--stuff-size));
-} */
 
 .elem-content {
     position: absolute;
@@ -295,7 +256,6 @@ main.mol-container {
 
 .bond {
     --bond-width: calc(var(--bond-width-initial) * var(--bond-width-mult));
-    /* --molecule-elem-dist: calc(1mm * var(--bond-width) + var(--stuff-size)); */
     --molecule-elem-dist: calc(1mm * var(--bond-width));
     --bond-attached-elem-width: 0; /* Gets set through JS */
     --bond-attached-elem-height: 0; /* Gets set through JS */
@@ -365,28 +325,28 @@ button.invert-molecule-col:hover .molecule .bond::before {
 } */
 
 .bond.single::before {
-    background: url("/assets/png/single_bond.png");
+    background-image: url("/assets/png/single_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
 
 .bond.double::before {
-    background: url("/assets/png/double_bond.png");
+    background-image: url("/assets/png/double_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
 
 .bond.triple::before {
-    background: url("/assets/png/triple_bond.png");
+    background-image: url("/assets/png/triple_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;
 }
 
 .bond.dotted::before {
-    background: url("/assets/png/dotted_bond.png");
+    background-image: url("/assets/png/dotted_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;

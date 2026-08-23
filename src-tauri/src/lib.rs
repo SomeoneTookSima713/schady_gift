@@ -39,10 +39,12 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .invoke_handler(tauri::generate_handler![
             save_molecule,
             load_molecule,
-            export_molecule,
+            export_molecule_png,
+            export_molecule_clipboard,
             shcmol_libraries::load_library
         ])
         .setup(|app| {

@@ -28,7 +28,20 @@
                     <li><a class="dropdown-item" href="#" id="options-load-molecule-from-library">Aus Bibliothek</a></li>
                 </ul>
             </div>
-            <button class="btn me-1 btn-outline-dark btn-sm" id="options-export-molecule">Molekül als Bild Exportieren</button>
+            <!-- <button class="btn me-1 btn-outline-dark btn-sm" id="options-export-molecule">Molekül als Bild Exportieren</button> -->
+             <div class="d-inline-block dropdown">
+                <button class="btn me-1 btn-outline-dark btn-sm dropdown-toggle options-export-dropdown" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    Molekül Exportieren
+                </button>
+                <ul class="dropdown-menu">
+                    <li><span class="dropdown-item-text options-export-quality-container">
+                        Qualität:
+                        <input class="form-control d-inline-block w-auto" id="options-export-quality-control" type="number" min="1" max="10" step="0.5" value="1" />
+                    </span></li>
+                    <li><a class="dropdown-item" href="#" id="options-export-molecule-to-png">Als PNG-Datei</a></li>
+                    <li><a class="dropdown-item" href="#" id="options-export-molecule-to-clipboard">In die Zwischenablage</a></li>
+                </ul>
+             </div>
             <button class="btn me-1 btn-outline-dark btn-sm" id="options-reset-molecule">Neues Molekül</button>
         </div>
         <main class="container-fluid h-100 mol-container" id="main_container">

@@ -1,4 +1,5 @@
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -38,62 +39,59 @@ pub async fn load_molecule(app_handle: tauri::AppHandle) -> Result<String, Strin
 }
 
 #[tauri::command]
-pub async fn export_molecule(
+pub async fn export_molecule_png(
     app_handle: tauri::AppHandle,
-    molecule_x: f32,
-    molecule_y: f32,
-    molecule_width: f32,
-    molecule_height: f32,
-) -> Result<String, String> {
-    let mut capture = xcap::Window::all()
-        .map_err(|e| format!("err_retrieve_windows_{e:?}"))?
-        .iter()
-        .find(|w| w.is_focused())
-        .map_or(Ok(None), |w| {
-            w.capture_image()
-                .map_err(|e| format!("err_take_screenshot_{e:?}"))
-                .map(Option::Some)
-        })?
-        .ok_or(format!("err_finding_window"))?;
+    request: tauri::ipc::Request<'_>,
+) -> tauri::Result<tauri::ipc::Response> {
+    if let tauri::ipc::InvokeBody::Raw(data) = request.body() {
+        // let img_width = request.headers().get("width").unwrap().to_str().unwrap().parse::<f32>().unwrap();
+        // let img_height = request.headers().get("height").unwrap().to_str().unwrap().parse::<f32>().unwrap();
 
-    let molecule = image::imageops::crop(
-        &mut capture,
-        molecule_x as u32,
-        molecule_y as u32,
-        molecule_width as u32,
-        molecule_height as u32,
-    );
+        let file_path = app_handle
+            .dialog()
+            .file()
+            .add_filter("PNG Image", &["png"])
+            .blocking_save_file();
 
-    let file_path = app_handle
-        .dialog()
-        .file()
-        .add_filter("PNG Image", &["png"])
-        .blocking_save_file();
+        if let Some(path) = file_path {
+            // use image::ImageEncoder;
+            use std::io::Write;
 
-    if let Some(path) = file_path {
-        use image::ImageEncoder;
+            let mut file = match std::fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(path.as_path().unwrap())
+            {
+                Ok(f) => f,
+                Err(e) => Err(anyhow::anyhow!("err_open_file_{:?}", e.kind()))?,
+            };
 
-        let file = match std::fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(path.as_path().unwrap())
-        {
-            Ok(f) => f,
-            Err(e) => return Err(format!("err_open_file_{:?}", e.kind())),
-        };
-
-        let encoder = image::codecs::png::PngEncoder::new(file);
-
-        encoder
-            .write_image(
-                &molecule.to_image(),
-                molecule_width as u32,
-                molecule_height as u32,
-                image::ExtendedColorType::Rgba8,
-            )
-            .map_err(|e| format!("err_encode_image_{e:?}"))
-            .map(|_| path.to_string())
+            Ok(file.write(data).map(|_| tauri::ipc::Response::new(format!("\"{}\"", path.to_string())))?)
+        } else {
+            Err(anyhow::anyhow!("err_save_aborted"))?
+        }
     } else {
-        Err("err_save_aborted".to_string())
+        Err(anyhow::anyhow!("err_invalid_cmd_arg"))?
+    }
+}
+
+#[tauri::command]
+pub async fn export_molecule_clipboard(
+    app_handle: tauri::AppHandle,
+    request: tauri::ipc::Request<'_>,
+) -> tauri::Result<tauri::ipc::Response> {
+    if let tauri::ipc::InvokeBody::Raw(data) = request.body() {
+        let img_width = request.headers().get("width").unwrap().to_str().unwrap().parse::<f32>().unwrap();
+        let img_height = request.headers().get("height").unwrap().to_str().unwrap().parse::<f32>().unwrap();
+
+        app_handle.clipboard().write_image(&tauri::image::Image::new(data, img_width as u32, img_height as u32))
+            .map_err(|e| match e {
+                tauri_plugin_clipboard_manager::Error::Tauri(e) => e,
+                tauri_plugin_clipboard_manager::Error::Clipboard(s) => tauri::Error::Anyhow(anyhow::anyhow!(s))
+            })?;
+
+        Ok(tauri::ipc::Response::new(String::from("\"success\"")))
+    } else {
+        Err(anyhow::anyhow!("err_invalid_cmd_arg"))?
     }
 }

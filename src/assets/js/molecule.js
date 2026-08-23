@@ -713,7 +713,8 @@ export class MoleculeRenderer {
                 this.html_element.style.setProperty("--molecule-offset-x", `${this.#mol_offset.x + this.#internal_mol_offset.x}px`);
                 this.html_element.style.setProperty("--molecule-offset-y", `${this.#mol_offset.y + this.#internal_mol_offset.y}px`);
             }
-            return metrics;
+            // Updates metrics
+            return getMoleculeSize(this.html_element.children[0]);
         } else {
             this.html_element.style.setProperty("--molecule-min-x", '0px');
             this.html_element.style.setProperty("--molecule-min-y", '0px');
@@ -742,6 +743,29 @@ export class MoleculeRenderer {
  * @property {number} initialX Screen X coordinate of the root element
  * @property {number} initialY Screen Y coordinate of the root element
  */
+
+/**
+ * @param {MoleculeMetrics} metrics 
+ */
+function dbgDrawMoleculeBounds(metrics) {
+    for (let c of document.querySelectorAll(".dbg-molecule-bounds")) {
+        document.body.removeChild(c);
+    }
+    
+    document.body.appendChild(createSimpleElement("div", [], {
+        classes: ["dbg-molecule-bounds"],
+        styles: {
+            width: `${metrics.width}px`,
+            height: `${metrics.height}px`,
+            position: "fixed",
+            left: `${metrics.minX}px`,
+            top: `${metrics.minY}px`,
+            border: "2px solid #49bb49",
+            "box-sizing": "border-box",
+            "z-index": "200"
+        }
+    }));
+}
 
 /**
  * @param {HTMLDivElement} mol_html 

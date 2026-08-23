@@ -4,6 +4,7 @@ import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRender
 import { getCurrentMolecule, InspectorWindow, setCurrentMolecule, closeInspector, mainMoleculeRenderer, InspectorHTML, undoMainMolecule, redoMainMolecule, addToMainMoleculeHistory, resetMainMoleculeHistory } from "./inspector.js";
 import { pushNotification } from "./notifications.js";
 import { isLibrarySelectorOpen, LIBRARY_SELECTOR_HTML, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
+import { createSimpleElement, makeNumInputScrollable } from "./html_helper.js";
 
 const invoke = window.__TAURI__.core.invoke;
 const listen = window.__TAURI__.event.listen;
@@ -123,27 +124,107 @@ function loadMoleculeFromLibrary() {
     });
 }
 
-function exportMolecule() {
-    let button = document.getElementById("options-export-molecule");
+/**
+ * @returns {Promise<HTMLCanvasElement>} The canvas containing the rendered molecule
+ */
+function renderMolecule() {
+    return new Promise(async (resolve, reject) => {
+        let scale = Number.parseFloat(document.querySelector(".options-export-quality-container input").value);
+
+        let moleculeMetrics = getMoleculeSize(document.getElementById("main_container").children[0]);
+
+        /** @type {HTMLElement} */
+        let moleculeElem = document.querySelector("#main_container .molecule");
+
+        // Compile external stylesheets into a baked CSS string
+        let resultingStyle = "";
+        let stylesheets = [
+            "/assets/css/main.css",
+            "/assets/css/molecule.css",
+            "/assets/css/molecule_numeric_classes.css"
+        ];
+        for (let sheet of stylesheets) {
+            let response = await fetch(sheet);
+            resultingStyle += `${(await response.text()).replace(/\/\*.*?\*\//, "")}\n`;
+        }
+
+        // Bake any external resources referenced in the CSS into the string
+        let urlRegex = /url\(\s*(['"])(.*?)\1\s*\)/g;
+        let blobUrlsToRevoke = [];
+
+        for (let match of resultingStyle.matchAll(urlRegex)) {
+            let url = match[2];
+            if (!url || url.startsWith("data:") || url.startsWith("#")) { continue; }
+            let response = await fetch(url);
+            if (!response.ok) {
+                console.warn("Error during export: Couldn't load CSS asset at url "+url);
+                continue;
+            }
+            let blob = await response.blob();
+            
+            let reader = new FileReader();
+            let repl = `url(${await new Promise(resolve => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            })})`;
+            // console.log(url, "=>", repl);
+            resultingStyle = resultingStyle.replaceAll(match[0], repl);
+        }
+
+        let svgSrc = `
+        <svg id="export-img-svg" xmlns="http://www.w3.org/2000/svg" width="${(moleculeMetrics.width + 40)*scale}" height="${(moleculeMetrics.height + 40)*scale}" style="display: block; overflow: hidden;">
+            <style>
+                <![CDATA[
+                ${resultingStyle}
+                div#molcont {
+                    width: 100%;
+                    height: 100%;
+                    transform-origin: 50% 0%;
+                    scale: ${scale};
+                }
+                ]]>
+            </style>
+            <foreignObject x="0" y="0" width="100%" height="100%">
+                <div id="molcont" style="${moleculeElem.parentElement.getAttribute("style")}" xmlns="http://www.w3.org/1999/xhtml">
+                    ${moleculeElem.parentElement.innerHTML}
+                </div>
+            </foreignObject>
+        </svg>
+        `;
+        let canvas = document.createElement("canvas");
+        canvas.width = (moleculeMetrics.width + 40)*scale;
+        canvas.height = (moleculeMetrics.height + 40)*scale;
+
+        let ctx = canvas.getContext("2d");
+        let svgBlob = new Blob([svgSrc], { type: "image/svg+xml;charset=utf-8" });
+
+        let tempImg = new Image();
+        tempImg.addEventListener("load", () => {
+            ctx.drawImage(tempImg, 0, 0);
+            for (let url of blobUrlsToRevoke) {
+                URL.revokeObjectURL(url);
+            }
+            resolve(canvas);
+        });
+        tempImg.addEventListener("error", e => {
+            console.error("Error loading SVG image for export: ", e.error, e.message);
+            reject(e);
+        });
+        tempImg.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgSrc)}`;
+    });
+}
+
+async function exportMoleculeAsPNG() {
+    let button = document.getElementsByClassName("options-export-dropdown")[0];
     button.disabled = true;
-    let moleculeMetrics = getMoleculeSize(document.getElementById("main_container").children[0]);
-
+    bootstrap.Dropdown.getOrCreateInstance(document.getElementsByClassName("options-export-dropdown")[0].parentElement.querySelector(".dropdown-menu")).hide();
     closeInspector();
-
-    console.log(moleculeMetrics);
-
-    let scale = Math.min(Math.max(window.innerWidth / (moleculeMetrics.width + 20), 1), 2);
-    let moleculeElem = document.querySelector("#main_container .molecule").childNodes[0].parentElement;
-    moleculeElem.style.transform = `scale(${scale})`;
-    let params = {
-        moleculeX: moleculeMetrics.minX - moleculeMetrics.width * 0.5 * (scale - 1) - 10,
-        moleculeY: moleculeMetrics.minY - moleculeMetrics.height * 0.5 * (scale - 1) - 10,
-        moleculeWidth: moleculeMetrics.width * scale + 20,
-        moleculeHeight: moleculeMetrics.height * scale + 20
-    };
-
-    setTimeout(() => {
-        invoke('export_molecule', params)
+    
+    let canvas = await renderMolecule();
+    canvas.toBlob(async blob => {
+        let buf = await blob.bytes();
+        console.log(buf.length);
+        invoke("export_molecule_png", buf, { headers: { width: canvas.width.toString(), height: canvas.height.toString() } })
             .then((/** @type {string} */ result) => {
                 pushNotification(
                     Translations.NOTIFICATIONS.TITLE_EXPORT,
@@ -165,16 +246,79 @@ function exportMolecule() {
             })
             .finally(() => {
                 button.disabled = false;
-                moleculeElem.style.transform = "";
-            });
-    }, 500);
+            })
+    });
+}
+
+async function exportMoleculeToClipboard() {
+    let button = document.getElementsByClassName("options-export-dropdown")[0];
+    button.disabled = true;
+    bootstrap.Dropdown.getOrCreateInstance(document.getElementsByClassName("options-export-dropdown")[0].parentElement.querySelector(".dropdown-menu")).hide();
+    closeInspector();
+    
+    let canvas = await renderMolecule();
+    let ctx = canvas.getContext("2d")
+    invoke("export_molecule_clipboard", ctx.getImageData(0, 0, canvas.width, canvas.height).data, { headers: { width: canvas.width.toString(), height: canvas.height.toString() } })
+        .then((/** @type {string} */ result) => {
+            pushNotification(
+                Translations.NOTIFICATIONS.TITLE_EXPORT,
+                Translations.NOTIFICATIONS.MSG_EXPORT_COMPLETED,
+                false, true
+            );
+            console.log(result);
+        })
+        .catch((/** @type {string} */ error) => {
+            if (error === "err_export_aborted") {
+                console.log("Load was aborted");
+            } else {
+                pushNotification(
+                    Translations.NOTIFICATIONS.TITLE_EXPORT,
+                    Translations.NOTIFICATIONS.MSG_EXPORT_ERRORED.replace("$1", error),
+                    true, false
+                );
+            }
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+
+    // canvas.toBlob(async blob => {
+    //     let buf = await blob.bytes();
+    //     console.log(buf.length);
+    //     invoke("export_molecule", buf, { headers: { width: canvas.width.toString(), height: canvas.height.toString() } })
+    //         .then((/** @type {string} */ result) => {
+    //             pushNotification(
+    //                 Translations.NOTIFICATIONS.TITLE_EXPORT,
+    //                 Translations.NOTIFICATIONS.MSG_EXPORT_COMPLETED,
+    //                 false, true
+    //             );
+    //             console.log(result);
+    //         })
+    //         .catch((/** @type {string} */ error) => {
+    //             if (error === "err_export_aborted") {
+    //                 console.log("Load was aborted");
+    //             } else {
+    //                 pushNotification(
+    //                     Translations.NOTIFICATIONS.TITLE_EXPORT,
+    //                     Translations.NOTIFICATIONS.MSG_EXPORT_ERRORED.replace("$1", error),
+    //                     true, false
+    //                 );
+    //             }
+    //         })
+    //         .finally(() => {
+    //             button.disabled = false;
+    //         })
+    // });
 }
 
 window.onload = () => {
     document.getElementById("options-save-molecule").onclick = saveMolecule;
     document.getElementById("options-load-molecule-from-file").onclick = loadMoleculeFromFile;
     document.getElementById("options-load-molecule-from-library").onclick = loadMoleculeFromLibrary;
-    document.getElementById("options-export-molecule").onclick = exportMolecule;
+    // document.getElementById("options-export-molecule").onclick = exportMolecule;
+    makeNumInputScrollable(document.querySelector(".options-export-quality-container input"), 1, 1, 0.5);
+    document.getElementById("options-export-molecule-to-png").onclick = exportMoleculeAsPNG;
+    document.getElementById("options-export-molecule-to-clipboard").onclick = exportMoleculeToClipboard;
     document.getElementById("options-reset-molecule").onclick = () => setCurrentMolecule(new Molecule("C"));
 };
 

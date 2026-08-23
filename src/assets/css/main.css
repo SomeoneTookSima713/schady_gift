@@ -30,6 +30,20 @@ body {
     height: 100vh;
 }
 
+#options-bar {
+    display: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    background: #f7f7f7;
+}
+
+.options-export-quality-container {
+    display: flex !important;
+    align-items: center;
+    column-gap: 0.75rem;
+}
+
 #main_container {
     overflow: hidden;
     font-family: 'Open Sans', sans-serif;
