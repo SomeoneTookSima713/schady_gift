@@ -3,7 +3,9 @@ export const Translations = Object.freeze({
         "single": "Einfach",
         "double": "Zweifach",
         "triple": "Dreifach",
-        "dotted": "Punkte"
+        "dotted": "Punkte",
+        "full_wedge": "Keil",
+        "dashed_wedge": "Gestrichelter Keil"
     },
     TEXTS: {
         INSPECTOR_BOND_CANNOT_REMOVE: "Diese Bindung kann hier nicht entfernt werden (dies ist eine Limitation der Anwendung). Klicke auf das gebundene Element und entferne sie dort.",

@@ -24,6 +24,9 @@ function unhighlightMolecule(currElem) {
 export function closeInspector() {
     document.getElementById("inspector").classList.remove("active");
     bootstrap.Dropdown.getOrCreateInstance(document.querySelector("#inspector .inspector-add-bond .dropup")).hide();
+    if (selectedElem) {
+        document.getElementById(`elem-${selectedElem.id}`).classList.remove("selected");
+    }
     selectedElem = null;
     currentlyOpenInspectorWindow = null;
     hightlightedElems.clear();

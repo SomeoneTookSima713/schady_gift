@@ -200,7 +200,7 @@ main.mol-container {
 .elem-content:not(.elem-empty)::before {
     display: block;
     content: '';
-    width: calc(var(--bond-attached-elem-width) + 0.02 * var(--stuff-size));
+    width: calc(var(--bond-attached-elem-width) + 0.12 * var(--stuff-size));
     height: calc(var(--bond-attached-elem-height) - var(--height-sub-top) - var(--height-sub-bottom) + 0.02 * var(--stuff-size));
     position: absolute;
     left: calc(-0.01 * var(--stuff-size) + var(--bg-offset-x));
@@ -291,8 +291,30 @@ main.mol-container {
         ;
 }
 
+.bond.flip::before {
+    transform:
+        rotate(calc(180deg + var(--bond-rot)))
+        translateX(calc(1mm * var(--bond-width)))
+        scaleX(-1)
+        /* translateX(calc(0.5 * var(--stuff-size))) */
+        ;
+}
+
 button.invert-molecule-col .molecule .bond::before {
     transition: filter 0.15s ease-in-out;
+}
+
+@property --workspace-background {
+    syntax: '<color>';
+    initial-value: #fff;
+    inherits: true;
+}
+
+button.invert-molecule-col .molecule {
+    transition: --workspace-background 0.15s ease-in-out;
+}
+button.invert-molecule-col:hover .molecule {
+    --workspace-background: #212529;
 }
 button.invert-molecule-col:hover .molecule .bond::before {
     filter: invert(1);
@@ -347,6 +369,20 @@ button.invert-molecule-col:hover .molecule .bond::before {
 
 .bond.dotted::before {
     background-image: url("/assets/png/dotted_bond.png");
+    background-size: calc(100% / var(--bond-width-mult)) 40%;
+    background-repeat: repeat-x;
+    background-position: 50% 50%;
+}
+
+.bond.full_wedge::before {
+    background-image: url("/assets/png/full_wedge_bond.png");
+    background-size: 100% 40%;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.bond.dashed_wedge::before {
+    background-image: url("/assets/png/dashed_wedge_bond.png");
     background-size: 100% 40%;
     background-repeat: no-repeat;
     background-position: 50% 50%;

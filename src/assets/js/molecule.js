@@ -8,7 +8,9 @@ export const BondType = Object.freeze({
     SINGLE: "single",
     DOUBLE: "double",
     TRIPLE: "triple",
-    DOTTED: "dotted"
+    DOTTED: "dotted",
+    FULL_WEDGE: "full_wedge",
+    DASHED_WEDGE: "dashed_wedge"
 });
 
 /**
