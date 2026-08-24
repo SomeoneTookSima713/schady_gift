@@ -294,6 +294,12 @@ window.onload = () => {
     document.getElementById("options-export-molecule-to-png").onclick = exportMoleculeAsPNG;
     document.getElementById("options-export-molecule-to-clipboard").onclick = exportMoleculeToClipboard;
     document.getElementById("options-reset-molecule").onclick = () => setCurrentMolecule(new Molecule("C"));
+
+    document.querySelector("#undo-redo .undo-btn").addEventListener("click", undoMainMolecule);
+    document.querySelector("#undo-redo .redo-btn").addEventListener("click", redoMainMolecule);
+
+    const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+    const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl))
 };
 
 setTimeout(() => {

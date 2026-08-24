@@ -2,53 +2,8 @@ import { Bond, BondType, ChemElem, Molecule, MoleculePositioning, MoleculeRender
 /** @import {BondAngle} from "./molecule.js" */
 
 import { Translations } from "./translations.js";
-import { createButton, createNumberInput, createSelect, createSimpleElement, createTextInput, createCheckboxInput, INPUT_SCROLL_DELTA, makeNumInputScrollable, makeNumInputIndirectlyScrollable } from "./html_helper.js";
-import { NEW_BOND_PRESETS } from "./bond_presets.js";
+import { INPUT_SCROLL_DELTA, makeNumInputScrollable, makeNumInputIndirectlyScrollable } from "./html_helper.js";
 import { LIBRARY_SELECTOR_HTML, LIBRARY_SELECTOR_OPTIONS_PRESETS, MoleculeLibrary, MoleculeLibrarySelector } from "./libraries.js";
-
-var PERSISTENT_ELEMS = {
-    inited: false,
-    /** @type {HTMLSelectElement?} */
-    ADD_SELECT: null,
-    /** @type {HTMLInputElement?} */
-    ADD_ANGLE: null,
-    /** @type {HTMLInputElement?} */
-    INC_ANGLE_CHECKBOX: null,
-    /** @type {HTMLInputElement?} */
-    SWITCH_INSPECT_CHECKBOX: null,
-    /** @type {HTMLInputElement?} */
-    BOND_LENGTH: null,
-};
-
-function getOrInitPersistentElems() {
-    if (!PERSISTENT_ELEMS.inited) {
-        PERSISTENT_ELEMS.ADD_SELECT = createSelect(Object.keys(NEW_BOND_PRESETS).map(id => [id, Translations.NEW_BOND_PRESETS[id]]), "empty", {
-            classes: ["inspector-add-bond-select-type"]
-        });
-        PERSISTENT_ELEMS.ADD_ANGLE = createNumberInput(0, {
-            classes: ["inspector-add-bond-angle"],
-            min: -15,
-            max: 360,
-            step: 15,
-            oninput: elem => { elem.value = ((Number(elem.value) + 3600) % 360).toString(); }
-        });
-        PERSISTENT_ELEMS.INC_ANGLE_CHECKBOX = createCheckboxInput(false, {
-            classes: ["inspector-add-bond-inc-angle"]
-        });
-        PERSISTENT_ELEMS.SWITCH_INSPECT_CHECKBOX = createCheckboxInput(false, {
-            classes: ["inspector-add-bond-switch-inspect"]
-        });
-        PERSISTENT_ELEMS.BOND_LENGTH = createNumberInput(1, {
-            classes: ["inspector-add-bond-length"],
-            min: 0.25,
-            max: 4,
-            step: 0.25,
-            oninput: elem => { elem.value = Math.max(Math.min(Number(elem.value), 4), 0.25).toString(); }
-        });
-        PERSISTENT_ELEMS.inited = true;
-    }
-    return PERSISTENT_ELEMS;
-}
 
 /**
  * @param {ChemElem} [currElem] 
@@ -66,49 +21,11 @@ function unhighlightMolecule(currElem) {
     }
 }
 
-// setInterval(() => {
-//     unhighlightMolecule();
-//     for (let elem of hightlightedElems.values()) {
-//         document.getElementById(`elem-${elem.id}`).classList.add("highlighted");
-//     }
-//     if (selectedElem) {
-//         document.getElementById(`elem-${selectedElem.id}`).classList.add("selected");
-//     }
-// }, 50);
-
-/**
- * @typedef {Object} InspectorWindowGeneralStuff
- * @property {HTMLButtonElement} closeBtn
- * @property {HTMLHeadingElement} titleGeneral
- * @property {HTMLLabelElement} labelElementText
- * @property {HTMLInputElement} inputElementText
- * @property {HTMLButtonElement} sparseRemoveBtn
- * @property {HTMLButtonElement} fullRemoveBtn
- */
-
-/**
- * @typedef {Object} InspectorWindowBondStuff
- * @property {HTMLButtonElement} removeBtn
- * @property {HTMLSelectElement} bondType
- * @property {HTMLInputElement} bondAngle
- * @property {HTMLInputElement} bondLength
- * @property {HTMLButtonElement} attachedElement
- */
-
-/**
- * @typedef {Object} InspectorWindowAddBondStuff
- * @property {HTMLButtonElement} addBtn
- * @property {HTMLSelectElement} bondPreset
- * @property {HTMLInputElement} bondAngle
- * @property {HTMLInputElement} incAngleCheckbox
- * @property {HTMLInputElement} switchInspectCheckbox
- * @property {HTMLInputElement} bondLength
- */
-
 export function closeInspector() {
     document.getElementById("inspector").classList.remove("active");
     bootstrap.Dropdown.getOrCreateInstance(document.querySelector("#inspector .inspector-add-bond .dropup")).hide();
     selectedElem = null;
+    currentlyOpenInspectorWindow = null;
     hightlightedElems.clear();
 }
 
@@ -546,7 +463,7 @@ export class InspectorAddBondDropdown {
                         b.attachedElem = undefined;
                     }, m => m.index(index).attachedBonds.splice(bondIndex, 1));
                 }
-                rerenderMainMolecule();
+                rerenderMainMolecule(false);
                 break;
             case "group":
                 let elem = this.bondElemTypeTabs.group.selectedBondGroup;
@@ -556,7 +473,7 @@ export class InspectorAddBondDropdown {
                 // addToMainMoleculeHistory();
                 // this.currentElem.attachElement(this.selectedBondType, this.bondAngle, this.bondLength, elem.root);
                 modifyMainMoleculeElem(this.currentElem, e => e.attachElement(bty, ba, bl, elem.root), e => elem.root.unattachSelf());
-                rerenderMainMolecule();
+                rerenderMainMolecule(false);
                 break;
             case "ring":
                 elemName = this.bondElemTypeTabs.ring.elemNameInput.value;
@@ -574,7 +491,7 @@ export class InspectorAddBondDropdown {
                     if (i == 0) { firstRingElem = newElem; }
                 }
                 modifyMainMoleculeElem(this.currentElem, e => e.attachElement(bty, ba, bl, firstRingElem), e => firstRingElem.unattachSelf() );
-                rerenderMainMolecule();
+                rerenderMainMolecule(false);
                 break;
         }
         if (this.bondChangeAngleCheck.checked) {
@@ -760,6 +677,9 @@ export class InspectorHTML {
     }
 }
 
+/** @type {InspectorWindow?} */
+let currentlyOpenInspectorWindow = null;
+
 export class InspectorWindow {
     /** @type {ChemElem} */
     element;
@@ -785,7 +705,11 @@ export class InspectorWindow {
      * @param {HTMLElement} container 
      */
     openAndRender(container) {
+        if (selectedElem) {
+            document.getElementById(`elem-${selectedElem.id}`).classList.remove("selected");
+        }
         selectedElem = this.element;
+        currentlyOpenInspectorWindow = this;
         unhighlightMolecule(currentMolecule.root);
         // hightlightedElems.clear();
         /** @type {HTMLElement} */
@@ -912,7 +836,7 @@ export function modifyMainMolecule(modification, inverse) {
  */
 export function modifyMainMoleculeElem(elem, modification, inverse) {
     let index = elem.moleculeIndex;
-    modifyMainMolecule(m => modification(m.index(index)), m => inverse(m.index(index)));
+    modifyMainMolecule(m => {unhighlightMolecule(elem); modification(m.index(index))}, m => {unhighlightMolecule(elem); inverse(m.index(index))});
 }
 
 /**
@@ -936,10 +860,16 @@ export function resetMainMoleculeHistory() {
 export function undoMainMolecule() {
     console.log("undo", currentMoleculeHistory, currentMoleculeRedoStack);
     if (currentMoleculeHistory.length > 0) {
+        let selectedElemIndex = selectedElem?.moleculeIndex;
         let mod = currentMoleculeHistory.pop();
         currentMoleculeRedoStack.push(mod);
         console.log("undo2", currentMoleculeHistory, currentMoleculeRedoStack);
         mod[1](currentMolecule);
+        if (currentlyOpenInspectorWindow && !currentMolecule.index(selectedElemIndex)) {
+            closeInspector();
+        } else if (currentlyOpenInspectorWindow && selectedElem) {
+            currentlyOpenInspectorWindow.inspectElemFn(selectedElem);
+        }
         rerenderMainMolecule();
     }
 }
@@ -947,18 +877,29 @@ export function undoMainMolecule() {
 export function redoMainMolecule() {
     console.log("redo", currentMoleculeHistory, currentMoleculeRedoStack);
     if (currentMoleculeRedoStack.length > 0) {
+        let selectedElemIndex = selectedElem?.moleculeIndex;
         let mod = currentMoleculeRedoStack.pop();
         currentMoleculeHistory.push(mod);
         console.log("redo2", currentMoleculeHistory, currentMoleculeRedoStack);
         mod[0](currentMolecule);
+        if (currentlyOpenInspectorWindow && !currentMolecule.index(selectedElemIndex)) {
+            closeInspector();
+        } else if (currentlyOpenInspectorWindow && selectedElem) {
+            currentlyOpenInspectorWindow.inspectElemFn(selectedElem);
+        }
         rerenderMainMolecule();
     }
 }
 
-export function rerenderMainMolecule() {
+/**
+ * 
+ * @param {boolean} [correctClass] (default = `true`) set to `false` to disable adding the `selected` class onto the element currently registed in the `selectedElem` variable
+ */
+export function rerenderMainMolecule(correctClass) {
+    correctClass = correctClass ?? true;
     mainMoleculeRenderer.render(currentMolecule);
     mainMoleculeRenderer.updateMoleculeSize();
-    if (selectedElem) {
+    if (selectedElem && correctClass) {
         waitForElm(`#elem-${selectedElem.id}`).then(elem => elem.classList.add("selected"));
     }
 }

@@ -96,7 +96,7 @@ export class Molecule {
     index(index) {
         let current = this.root;
         for (let idx of index) {
-            current = current.attachedBonds[idx]?.attachedElem;
+            current = current?.attachedBonds[idx]?.attachedElem;
             if (!current) {
                 return null;
             }

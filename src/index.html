@@ -44,6 +44,10 @@
              </div>
             <button class="btn me-1 btn-outline-dark btn-sm" id="options-reset-molecule">Neues Molekül</button>
         </div>
+        <div id="undo-redo" class="btn-group" role="group">
+            <a href="#" class="text-dark ps-2 pb-2 undo-btn" data-bs-toggle="popover" data-bs-placement="top" data-bs-popper-config='{"placement": "top-start"}' data-bs-trigger="hover" data-bs-custom-class="undo-redo-popover" data-bs-content="Rückgängig (Strg+Z)"><i class="fa-solid fa-arrow-rotate-left"></i></a>
+            <a href="#" class="text-dark ps-2 pb-2 redo-btn" data-bs-toggle="popover" data-bs-placement="top" data-bs-popper-config='{"placement": "top-start"}' data-bs-trigger="hover" data-bs-custom-class="undo-redo-popover" data-bs-content="Wiederholen (Strg+Y)"><i class="fa-solid fa-arrow-rotate-right"></i></a>
+        </div>
         <main class="container-fluid h-100 mol-container" id="main_container">
         </main>
         <div id="inspector" class="container active">
