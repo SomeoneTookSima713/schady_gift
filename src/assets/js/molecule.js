@@ -396,16 +396,22 @@ export class ChemElem {
 
     /** @type {string} */
     get nameAsHTML() {
-        let converted_name = new String(this.name);
-        converted_name = converted_name.replaceAll(ChemElem.PAT_SUBSUPSCRIPT, (_1, ty, _3, _4, _offset, _string, groups) => {
+        let convertedName = new String(this.name);
+        convertedName = convertedName.replaceAll(ChemElem.PAT_SUBSUPSCRIPT, (_1, ty, _3, _4, _offset, _string, groups) => {
             let tag = ty === "_" ? "sub" : "sup";
             // console.log(_1, "=>", `<${tag}>${groups.content}</${tag}>`);
             return `<${tag}>${groups.content}</${tag}>`;
         }).replaceAll(ChemElem.PAT_REGULAR_TEXT, (whole, _2, _3, _4, _5, _6, groups) => {
             // console.log(whole, "=>", `<span>${groups.text}</span>${whole.replace(groups.text, "")}`);
-            return `<span>${groups.text}</span>${whole.replace(groups.text, "")}`;
+            return `${groups.text.replaceAll(/(?<content>.)/g, "<span>$<content></span>")}${whole.replace(groups.text, "")}`;
         });
-        return converted_name;
+        let didReplace = true
+        while (didReplace) {
+            let oldConvertedName = convertedName
+            convertedName = convertedName.replaceAll(/<\/span><(?<tag>sub|sup)>(?<content>[^<>]+)<\/\k<tag>>/g, "<span class=\"custom-$<tag>\">$<content></span></span>")
+            didReplace = oldConvertedName !== convertedName;
+        }
+        return convertedName;
     }
 
     /** @type {string} */

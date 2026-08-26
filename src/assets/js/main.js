@@ -172,7 +172,7 @@ function renderMolecule() {
         }
 
         let svgSrc = `
-        <svg id="export-img-svg" xmlns="http://www.w3.org/2000/svg" width="${(moleculeMetrics.width + 40)*scale}" height="${(moleculeMetrics.height + 40)*scale}" style="display: block; overflow: hidden;">
+        <svg id="export-img-svg" xmlns="http://www.w3.org/2000/svg" width="${(moleculeMetrics.width)*scale}" height="${(moleculeMetrics.height)*scale}" style="display: block; overflow: hidden;">
             <style>
                 <![CDATA[
                 ${resultingStyle}
@@ -194,11 +194,10 @@ function renderMolecule() {
         </svg>
         `;
         let canvas = document.createElement("canvas");
-        canvas.width = (moleculeMetrics.width + 40)*scale;
-        canvas.height = (moleculeMetrics.height + 40)*scale;
+        canvas.width = (moleculeMetrics.width)*scale;
+        canvas.height = (moleculeMetrics.height)*scale;
 
         let ctx = canvas.getContext("2d");
-        let svgBlob = new Blob([svgSrc], { type: "image/svg+xml;charset=utf-8" });
 
         let tempImg = new Image();
         tempImg.addEventListener("load", () => {

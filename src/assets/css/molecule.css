@@ -195,6 +195,18 @@ main.mol-container {
     transform: translateY(calc(var(--stuff-size) * -0.16));
 }
 
+.custom-sub {
+    position: relative;
+    font-size: calc(var(--stuff-size) * .7);
+    bottom: calc(var(--stuff-size) * -0.15);
+}
+
+.custom-sup {
+    position: relative;
+    font-size: calc(var(--stuff-size) * .7);
+    top: calc(var(--stuff-size) * -0.35);
+}
+
 .elem-content button {
     border: none;
     padding: 0;
