@@ -78,6 +78,14 @@ main.mol-container {
             position: relative;
             z-index: 10;
         }
+
+        > sup {
+            z-index: 10;
+        }
+
+        > sub {
+            z-index: 10;
+        }
     }
 
     &:has(> button sub) {

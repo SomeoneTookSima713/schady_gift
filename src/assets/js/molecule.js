@@ -278,10 +278,10 @@ const CHAR_TO_SUPERSCRIPT = Object.freeze({
 });
 
 export class ChemElem {
-    static PAT_SUBSCRIPT = /_(\d+|\{[^}]+\})/;
-    static PAT_SUPERSCRIPT = /\^(\d?(\+|\-)|\{[^}]+\})/;
-    static PAT_REGULAR_TEXT_1 = /([^<>\/]*)(<sub>[^<]*<\/sub>|<sup>[^<]<\/sup>)/g;
-    static PAT_REGULAR_TEXT_2 = /([^<>\/]*)$/;
+    static PAT_SUBSCRIPT = /_(\d+|\{[^}]+\})/g;
+    static PAT_SUPERSCRIPT = /\^(\d?(\+|\-)|\{[^}]+\})/g;
+    static PAT_SUBSUPSCRIPT = /(_|\^)(?:(?<content>\d*(?:\d|\+|\-))|\{(?<content>[^}]*)\})/g;
+    static PAT_REGULAR_TEXT = /(?:(?<text>[^<>]+)<(?<tag>[^>]+)>[^<>]*<\/\k<tag>>)|(?:(?<text>[^<>]+)$)/g;
 
     /** @type {string} */
     name;
@@ -397,48 +397,22 @@ export class ChemElem {
     /** @type {string} */
     get nameAsHTML() {
         let converted_name = new String(this.name);
-        let match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
-        while (match) {
-            converted_name = converted_name.replace(match[0], `<sub>${match[1].replaceAll(/[{}]/g, "")}</sub>`);
-            match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
-        }
-        match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
-        while (match) {
-            converted_name = converted_name.replace(match[0], `<sup>${match[1].replaceAll(/[{}]/g, "")}</sup>`);
-            match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
-        }
-        for (let match of converted_name.matchAll(ChemElem.PAT_REGULAR_TEXT_1)) {
-            let spanned = "";
-            for (let i=0; i<match[1].length - 1; i++) {
-                spanned += `<span>${match[1].charAt(i)}</span>`;
-            }
-            spanned += `<span>${match[1].charAt(match[1].length - 1)}${match[2]}</span>`;
-            converted_name = converted_name.replace(match[0], spanned);
-        }
-        match = converted_name.match(ChemElem.PAT_REGULAR_TEXT_2);
-        if (match) {
-            let spanned = "";
-            for (let i=0; i<match[1].length; i++) {
-                spanned += `<span>${match[1].charAt(i)}</span>`;
-            }
-            converted_name = converted_name.replace(match[1], spanned);
-        }
+        converted_name = converted_name.replaceAll(ChemElem.PAT_SUBSUPSCRIPT, (_1, ty, _3, _4, _offset, _string, groups) => {
+            let tag = ty === "_" ? "sub" : "sup";
+            // console.log(_1, "=>", `<${tag}>${groups.content}</${tag}>`);
+            return `<${tag}>${groups.content}</${tag}>`;
+        }).replaceAll(ChemElem.PAT_REGULAR_TEXT, (whole, _2, _3, _4, _5, _6, groups) => {
+            // console.log(whole, "=>", `<span>${groups.text}</span>${whole.replace(groups.text, "")}`);
+            return `<span>${groups.text}</span>${whole.replace(groups.text, "")}`;
+        });
         return converted_name;
     }
 
     /** @type {string} */
     get nameAsAttr() {
         let converted_name = new String(this.name);
-        let match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
-        while (match) {
-            converted_name = converted_name.replace(match[0], match[1].replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUBSCRIPT[v] ?? "_"));
-            match = converted_name.match(ChemElem.PAT_SUBSCRIPT);
-        }
-        match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
-        while (match) {
-            converted_name = converted_name.replace(match[0], match[1].replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUPERSCRIPT[v] ?? "_"));
-            match = converted_name.match(ChemElem.PAT_SUPERSCRIPT);
-        }
+        converted_name = converted_name.replaceAll(ChemElem.PAT_SUBSCRIPT, (_, content) => content.replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUBSCRIPT[v] ?? CHAR_TO_SUBSCRIPT["1"]))
+        converted_name = converted_name.replaceAll(ChemElem.PAT_SUPERSCRIPT, (_, content) => content.replaceAll(/[{}]/g, "").replaceAll(/./g, v => CHAR_TO_SUPERSCRIPT[v] ?? CHAR_TO_SUPERSCRIPT["1"]))
         return converted_name;
     }
 
