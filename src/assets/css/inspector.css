@@ -81,6 +81,16 @@
     cursor: default;
 }
 
+.bond-type-menu li a {
+    display: flex;
+    justify-content: space-between;
+
+    img {
+        display: inline-block;
+        width: min-content;
+    }
+}
+
 #inspector .inspector-add-bond {
     > div > .dropdown-menu {
         width: 500px;
